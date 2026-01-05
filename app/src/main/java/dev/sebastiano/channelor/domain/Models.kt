@@ -7,6 +7,7 @@ data class ZigbeeChannelCongestion(
     val centerFrequency: Int,
     val congestionScore: Double,
     val isZllRecommended: Boolean = false,
-    val annotation: String? = null,
     val isWarning: Boolean = false,
+    val pros: List<String> = emptyList(),
+    val cons: List<String> = emptyList(),
 )

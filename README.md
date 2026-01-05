@@ -1,6 +1,7 @@
 # Channelor
 
-Channelor is an Android application designed to analyze Wi-Fi interference in the 2.4GHz spectrum and recommend the optimal Zigbee channels for smart home setups.
+Channelor is an Android application designed to analyze Wi-Fi interference in the 2.4GHz spectrum
+and recommend the optimal Zigbee channels for smart home setups.
 
 ## Features
 
@@ -8,6 +9,8 @@ Channelor is an Android application designed to analyze Wi-Fi interference in th
 - **Zigbee Interference Analysis**: Evaluates impact on all 16 Zigbee channels (11-26).
 - **Congestion Scoring**: Quantitative scoring based on RSSI and spectral overlap.
 - **Optimal Recommendations**: Highlights the top 3 least congested Zigbee channels.
+- **Detailed Channel Insights**: Interactive channel cards that show detailed pros and cons (e.g.,
+  ZLL compatibility, standard Wi-Fi overlap).
 - **Visual Representation**: Graphical view of spectral congestion.
 - **Modern Tech Stack**: Built with Jetpack Compose, Kotlin Coroutines/Flow, and Hilt.
 
@@ -25,7 +28,8 @@ Channelor is an Android application designed to analyze Wi-Fi interference in th
 2. Open the project in Android Studio.
 3. Sync the project with Gradle files.
 4. Build the project using the `./gradlew assembleDebug` command or via the IDE.
-5. Run the application on your device using the "Run" button in Android Studio or `./gradlew installDebug`.
+5. Run the application on your device using the "Run" button in Android Studio or
+   `./gradlew installDebug`.
 
 ## License
 

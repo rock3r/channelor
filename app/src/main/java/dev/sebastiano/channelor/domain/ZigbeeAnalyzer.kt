@@ -21,22 +21,31 @@ class ZigbeeAnalyzer @Inject constructor() {
                 centerFrequency = frequency,
                 congestionScore = score,
                 isZllRecommended = channel in ZLL_RECOMMENDED_CHANNELS,
-                annotation = getAnnotationForChannel(channel),
                 isWarning = channel == ZIGBEE_MAX_CHANNEL,
+                pros = getProsForChannel(channel),
+                cons = getConsForChannel(channel),
             )
         }
     }
 
     @Suppress("MagicNumber")
-    private fun getAnnotationForChannel(channel: Int): String? =
-        when (channel) {
-            11 -> "Usually crowded by Wi-Fi"
-            26 -> "Problematic (low power, poor device support)"
-            15,
-            20,
-            25 -> null
-            else -> "Possible compatibility issues (Hue, IKEA, etc.)"
+    private fun getProsForChannel(channel: Int): List<String> = buildList {
+        if (channel in ZLL_RECOMMENDED_CHANNELS) add("Zigbee Light Link (ZLL) recommended channel")
+        if (channel == 26) add("Little to no Wi-Fi interference")
+    }
+
+    @Suppress("MagicNumber")
+    private fun getConsForChannel(channel: Int): List<String> = buildList {
+        if (channel == 11) add("Usually occupied by Wi-Fi (Channel 1)")
+        if (channel == 26) {
+            add("Lower transmission power allowed by FCC/ETSI")
+            add("Often poor device support (some devices can't reach CH 26)")
         }
+        if (channel !in ZLL_RECOMMENDED_CHANNELS) {
+            add("Not a standard ZLL channel")
+            add("Potential compatibility issues with Hue, IKEA, etc.")
+        }
+    }
 
     private fun calculateCongestionForChannel(
         zigbeeCenterFreq: Int,

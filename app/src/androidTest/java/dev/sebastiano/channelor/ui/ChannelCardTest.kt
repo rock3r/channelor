@@ -21,7 +21,7 @@ class ChannelCardTest {
                 isZllRecommended = true,
             )
 
-        composeTestRule.setContent { ChannelorTheme { ChannelCard(channel) } }
+        composeTestRule.setContent { ChannelorTheme { ChannelCard(channel, onClick = {}) } }
 
         composeTestRule.onNodeWithText("CH 11").assertExists()
         composeTestRule.onNodeWithText("2405 MHz").assertExists()
@@ -29,18 +29,20 @@ class ChannelCardTest {
     }
 
     @Test
-    fun channelCard_displaysAnnotation() {
+    fun channelCard_invokesOnClick() {
+        var clicked = false
         val channel =
             ZigbeeChannelCongestion(
-                channelNumber = 26,
-                centerFrequency = 2480,
+                channelNumber = 11,
+                centerFrequency = 2405,
                 congestionScore = 0.0,
-                annotation = "Problematic",
             )
 
-        composeTestRule.setContent { ChannelorTheme { ChannelCard(channel) } }
+        composeTestRule.setContent {
+            ChannelorTheme { ChannelCard(channel, onClick = { clicked = true }) }
+        }
 
-        composeTestRule.onNodeWithText("CH 26").assertExists()
-        composeTestRule.onNodeWithText("Problematic").assertExists()
+        composeTestRule.onNodeWithText("CH 11").performClick()
+        assert(clicked)
     }
 }

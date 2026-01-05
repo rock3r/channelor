@@ -23,24 +23,31 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.ThumbDown
+import androidx.compose.material.icons.rounded.ThumbUp
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -90,8 +97,12 @@ fun DashboardScreen(viewModel: MainViewModel = hiltViewModel()) {
 }
 
 @Suppress("FunctionNaming")
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardContent(state: DashboardState, onScanClick: () -> Unit) {
+    var selectedChannel by remember { mutableStateOf<ZigbeeChannelCongestion?>(null) }
+    val sheetState = rememberModalBottomSheetState()
+
     Scaffold(
         floatingActionButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -118,7 +129,7 @@ fun DashboardContent(state: DashboardState, onScanClick: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                RecommendationSection(state.recommendedChannels)
+                RecommendationSection(state.recommendedChannels) { selectedChannel = it }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -131,6 +142,12 @@ fun DashboardContent(state: DashboardState, onScanClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
+        }
+    }
+
+    if (selectedChannel != null) {
+        ModalBottomSheet(onDismissRequest = { selectedChannel = null }, sheetState = sheetState) {
+            ChannelDetailsContent(channel = selectedChannel!!)
         }
     }
 }
@@ -286,7 +303,10 @@ fun HeaderSection() {
 
 @Suppress("FunctionNaming")
 @Composable
-fun RecommendationSection(topChannels: List<ZigbeeChannelCongestion>) {
+fun RecommendationSection(
+    topChannels: List<ZigbeeChannelCongestion>,
+    onChannelClick: (ZigbeeChannelCongestion) -> Unit,
+) {
     Text(
         text = "Recommended Channels",
         style = MaterialTheme.typography.titleMedium,
@@ -307,14 +327,16 @@ fun RecommendationSection(topChannels: List<ZigbeeChannelCongestion>) {
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
-            items(topChannels) { channel -> ChannelCard(channel) }
+            items(topChannels) { channel ->
+                ChannelCard(channel = channel, onClick = { onChannelClick(channel) })
+            }
         }
     }
 }
 
 @Suppress("FunctionNaming")
 @Composable
-fun ChannelCard(channel: ZigbeeChannelCongestion) {
+fun ChannelCard(channel: ZigbeeChannelCongestion, onClick: () -> Unit) {
     val containerColor =
         when {
             channel.isZllRecommended -> MaterialTheme.colorScheme.primaryContainer
@@ -332,40 +354,113 @@ fun ChannelCard(channel: ZigbeeChannelCongestion) {
     Card(
         modifier = Modifier.size(width = 160.dp, height = 120.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
+        onClick = onClick,
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = "CH ${channel.channelNumber}",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = onContainerColor,
+        Box(modifier = Modifier.fillMaxSize()) {
+            Icon(
+                imageVector = Icons.Rounded.Info,
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(16.dp),
+                tint = onContainerColor.copy(alpha = 0.5f),
             )
-            Text(
-                text = "${channel.centerFrequency} MHz",
-                style = MaterialTheme.typography.labelSmall,
-                color = onContainerColor.copy(alpha = 0.7f),
-            )
-            if (channel.isZllRecommended) {
+
+            Column(
+                modifier = Modifier.fillMaxSize().padding(12.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Text(
-                    text = "ZLL Recommended",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
+                    text = "CH ${channel.channelNumber}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
                     color = onContainerColor,
                 )
+                Text(
+                    text = "${channel.centerFrequency} MHz",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = onContainerColor.copy(alpha = 0.7f),
+                )
+                if (channel.isZllRecommended) {
+                    Text(
+                        text = "ZLL Recommended",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = onContainerColor,
+                    )
+                }
             }
-            channel.annotation?.let {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = onContainerColor,
-                    textAlign = TextAlign.Center,
-                    lineHeight = androidx.compose.ui.unit.TextUnit.Unspecified,
-                )
+        }
+    }
+}
+
+@Suppress("FunctionNaming")
+@Composable
+fun ChannelDetailsContent(channel: ZigbeeChannelCongestion) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 8.dp, bottom = 48.dp)
+    ) {
+        Text(
+            text = "Channel ${channel.channelNumber} Details",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = "Center frequency: ${channel.centerFrequency} MHz",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.secondary,
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (channel.pros.isNotEmpty()) {
+            Text(
+                text = "Pros",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            channel.pros.forEach { pro ->
+                Row(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ThumbUp,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(text = pro, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (channel.cons.isNotEmpty()) {
+            Text(
+                text = "Cons",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            channel.cons.forEach { con ->
+                Row(
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ThumbDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(text = con, style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }
@@ -382,38 +477,81 @@ fun ChannelCard(channel: ZigbeeChannelCongestion) {
 fun ChannelCardPreview() {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ChannelCard(
-            ZigbeeChannelCongestion(
-                channelNumber = 11,
-                centerFrequency = 2405,
-                congestionScore = 0.0,
-                isZllRecommended = true,
-                annotation = "Usually crowded by Wi-Fi",
-            )
+            channel =
+                ZigbeeChannelCongestion(
+                    channelNumber = 11,
+                    centerFrequency = 2405,
+                    congestionScore = 0.0,
+                    isZllRecommended = true,
+                ),
+            onClick = {},
         )
         ChannelCard(
-            ZigbeeChannelCongestion(
-                channelNumber = 15,
-                centerFrequency = 2425,
-                congestionScore = 0.0,
-                isZllRecommended = true,
-            )
+            channel =
+                ZigbeeChannelCongestion(
+                    channelNumber = 15,
+                    centerFrequency = 2425,
+                    congestionScore = 0.0,
+                    isZllRecommended = true,
+                ),
+            onClick = {},
         )
         ChannelCard(
-            ZigbeeChannelCongestion(
-                channelNumber = 26,
-                centerFrequency = 2480,
-                congestionScore = 0.0,
-                isWarning = true,
-                annotation = "Problematic (low power, poor device support)",
-            )
+            channel =
+                ZigbeeChannelCongestion(
+                    channelNumber = 26,
+                    centerFrequency = 2480,
+                    congestionScore = 0.0,
+                    isWarning = true,
+                ),
+            onClick = {},
         )
         ChannelCard(
-            ZigbeeChannelCongestion(
-                channelNumber = 12,
-                centerFrequency = 2410,
-                congestionScore = 0.0,
-                annotation = "Possible compatibility issues (Hue, IKEA, etc.)",
-            )
+            channel =
+                ZigbeeChannelCongestion(
+                    channelNumber = 12,
+                    centerFrequency = 2410,
+                    congestionScore = 0.0,
+                ),
+            onClick = {},
+        )
+    }
+}
+
+@Suppress("MagicNumber", "FunctionNaming")
+@Preview(name = "Details Sheet (Recommended)", showBackground = true)
+@Composable
+fun ChannelDetailsRecommendedPreview() {
+    ChannelorTheme {
+        ChannelDetailsContent(
+            channel =
+                ZigbeeChannelCongestion(
+                    channelNumber = 15,
+                    centerFrequency = 2425,
+                    congestionScore = 10.0,
+                    isZllRecommended = true,
+                    pros = listOf("Zigbee Light Link (ZLL) recommended channel"),
+                    cons = emptyList(),
+                )
+        )
+    }
+}
+
+@Suppress("MagicNumber", "FunctionNaming")
+@Preview(name = "Details Sheet (Problematic)", showBackground = true)
+@Composable
+fun ChannelDetailsProblematicPreview() {
+    ChannelorTheme {
+        ChannelDetailsContent(
+            channel =
+                ZigbeeChannelCongestion(
+                    channelNumber = 11,
+                    centerFrequency = 2405,
+                    congestionScore = 80.0,
+                    isZllRecommended = true,
+                    pros = listOf("Zigbee Light Link (ZLL) recommended channel"),
+                    cons = listOf("Usually occupied by Wi-Fi (Channel 1)"),
+                )
         )
     }
 }

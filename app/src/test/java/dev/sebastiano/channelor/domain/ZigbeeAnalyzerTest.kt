@@ -45,4 +45,25 @@ class ZigbeeAnalyzerTest {
         val recommended = results.filter { it.isZllRecommended }.map { it.channelNumber }
         assertEquals(listOf(11, 15, 20, 25), recommended)
     }
+
+    @Test
+    fun `pros and cons are correctly populated for specific channels`() {
+        val results = analyzer.analyzeCongestion(emptyList())
+
+        val ch11 = results.find { it.channelNumber == 11 }!!
+        assertTrue(ch11.cons.contains("Usually occupied by Wi-Fi (Channel 1)"))
+        assertTrue(ch11.pros.contains("Zigbee Light Link (ZLL) recommended channel"))
+
+        val ch26 = results.find { it.channelNumber == 26 }!!
+        assertTrue(ch26.pros.contains("Little to no Wi-Fi interference"))
+        assertTrue(ch26.cons.any { it.contains("Lower transmission power") })
+
+        val ch15 = results.find { it.channelNumber == 15 }!!
+        assertTrue(ch15.pros.contains("Zigbee Light Link (ZLL) recommended channel"))
+        assertTrue(ch15.cons.isEmpty())
+
+        val ch12 = results.find { it.channelNumber == 12 }!!
+        assertTrue(ch12.pros.isEmpty())
+        assertTrue(ch12.cons.contains("Not a standard ZLL channel"))
+    }
 }
