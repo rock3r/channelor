@@ -3,6 +3,8 @@
 Channelor is an Android application designed to analyze Wi-Fi interference in the 2.4GHz spectrum
 and recommend the optimal Zigbee channels for smart home setups.
 
+The app has been developed with the help of the AI features in Android Studio and Antigravity.
+
 ## Features
 
 - **2.4GHz Wi-Fi Scanning**: Identifies nearby Wi-Fi networks and their interference potential.
@@ -34,8 +36,7 @@ and recommend the optimal Zigbee channels for smart home setups.
 ## License
 
 ```
-Copyright 2024 The Channelor Authors
-
+Copyright 2026 Sebastiano Poggi and the Channelor contributors
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
