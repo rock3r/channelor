@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -14,11 +15,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import dev.sebastiano.channelor.domain.WifiNetwork
@@ -26,181 +29,263 @@ import dev.sebastiano.channelor.domain.ZigbeeChannelCongestion
 import dev.sebastiano.channelor.ui.theme.ChannelorTheme
 import kotlin.math.exp
 
-@Composable
-fun SpectrumGraph(
-  wifiScanResults: List<WifiNetwork>,
-  zigbeeCongestion: List<ZigbeeChannelCongestion>,
-  top3ChannelNumbers: Set<Int>,
-  modifier: Modifier = Modifier,
+/** Configuration for the spectrum graph display. */
+private data class GraphConfig(
+    val minFreq: Float = 2400f,
+    val maxFreq: Float = 2483.5f,
+    val minRssi: Float = -100f,
+    val maxRssi: Float = -30f,
+    val wifiBandwidthMhz: Float = 22f, // WiFi signal spans ±11 MHz from center
+    val wifiCurveSteps: Int = 20, // Number of points to render WiFi signal curve
+    val wifiCurveSigma: Double = 4.0, // Gaussian curve width parameter
+    val zigbeeLabelTopMargin: Dp = 5.dp,
+    val zigbeeLabelPadding: Dp = 4.dp,
+    val labelBackgroundPadding: Dp = 4.dp,
+    val wifiStrokeWidth: Dp = 1.5.dp,
+    val zigbeeRegularStrokeWidth: Dp = 1.dp,
+    val zigbeeTop3StrokeWidth: Dp = 3.dp,
+    val gridLineWidth: Float = 2f,
 ) {
-  val textMeasurer = rememberTextMeasurer()
-  val axisColor = MaterialTheme.colorScheme.outline
-  val wifiStrokeColor = MaterialTheme.colorScheme.tertiary
-  val wifiFillColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
-  val zigbeeTop3Color = MaterialTheme.colorScheme.primary
-  val zigbeeRecommendedColor = MaterialTheme.colorScheme.secondary
-  val zigbeeRegularColor = MaterialTheme.colorScheme.outlineVariant
-  val labelBackgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+  val freqRange: Float = maxFreq - minFreq
+  val rssiRange: Float = maxRssi - minRssi
+}
 
-  Canvas(modifier = modifier) {
-    val width = size.width
-    val height = size.height
+/** Maps frequency and RSSI values to canvas coordinates. */
+private class CoordinateMapper(
+    private val config: GraphConfig,
+    private val canvasWidth: Float,
+    private val canvasHeight: Float,
+) {
+  fun freqToX(freq: Float): Float = ((freq - config.minFreq) / config.freqRange) * canvasWidth
 
-    // X-Axis: 2400 to 2483.5 MHz
-    val minFreq = 2400f
-    val maxFreq = 2483.5f
-    val freqRange = maxFreq - minFreq
+  fun freqToX(freq: Int): Float = freqToX(freq.toFloat())
 
-    // Y-Axis: -100 to -30 dBm
-    val minRssi = -100f
-    val maxRssi = -30f
-    val rssiRange = maxRssi - minRssi
-
-    fun freqToX(freq: Int): Float {
-      return ((freq - minFreq) / freqRange) * width
-    }
-
-    fun freqToX(freq: Float): Float {
-      return ((freq - minFreq) / freqRange) * width
-    }
-
-    fun rssiToY(rssi: Int): Float {
-      val clampedRssi = rssi.coerceIn(minRssi.toInt(), maxRssi.toInt())
-      return height - ((clampedRssi - minRssi) / rssiRange) * height
-    }
-
-    // Draw Grid
-    drawGrid(width, height, axisColor)
-
-    // Draw Wi-Fi Signals - optimized with fewer steps and simpler rendering
-    wifiScanResults.forEach { network ->
-      val centerFreq = network.frequency
-      val rssi = network.rssi
-
-      val path = Path()
-      val startFreq = centerFreq - 11f
-      val endFreq = centerFreq + 11f
-
-      // Increased steps from 10 to 40 for smoother curves
-      val steps = 20
-      val stepSize = (endFreq - startFreq) / steps
-
-      val peakY = rssiToY(rssi)
-      val baseY = rssiToY(-100) // Bottom
-
-      path.moveTo(freqToX(startFreq), baseY)
-
-      // Pre-calculate constants outside loop
-      val sigma = 4.0
-      val twoSigmaSquared = 2 * sigma * sigma
-
-      for (i in 0..steps) {
-        val f = startFreq + i * stepSize
-        val x = freqToX(f)
-
-        // Optimized Gaussian calculation
-        val diff = f - centerFreq
-        val shapeFactor = exp(-(diff * diff) / twoSigmaSquared).toFloat()
-
-        val y = baseY - (baseY - peakY) * shapeFactor
-
-        path.lineTo(x, y)
-      }
-
-      path.lineTo(freqToX(endFreq), baseY)
-      path.close()
-
-      // Single fill with reduced gradient complexity
-      drawPath(path = path, color = wifiFillColor)
-
-      // Stroke outline
-      drawPath(path = path, color = wifiStrokeColor, style = Stroke(width = 1.5.dp.toPx()))
-    }
-
-    // Draw Zigbee Markers
-    zigbeeCongestion.forEach { zigbee ->
-      val x = freqToX(zigbee.centerFrequency)
-      val isTop3 = zigbee.channelNumber in top3ChannelNumbers
-
-      val color =
-        when {
-          isTop3 -> zigbeeTop3Color
-          zigbee.isZllRecommended -> zigbeeRecommendedColor
-          else -> zigbeeRegularColor.copy(alpha = 0.5f)
-        }
-
-      // Channel Number
-      val textLayout =
-        textMeasurer.measure(
-          text = "${zigbee.channelNumber}",
-          style =
-            TextStyle(
-              color = color,
-              fontSize = TextUnit.Unspecified,
-              fontWeight = if (isTop3) FontWeight.Bold else FontWeight.Normal,
-            ),
-        )
-
-      val labelX = x - textLayout.size.width / 2
-      val labelY = 5f
-
-      val strokeWidth = if (isTop3) 3.dp.toPx() else 1.dp.toPx()
-
-      // Vertical Line
-      drawLine(
-        color = color,
-        start = Offset(x, labelY + textLayout.size.height + 4f),
-        end = Offset(x, height),
-        strokeWidth = strokeWidth,
-      )
-
-      // Background for legibility
-      drawRect(
-        color = labelBackgroundColor,
-        topLeft = Offset(labelX - 4f, labelY - 2f),
-        size = Size(textLayout.size.width.toFloat() + 8f, textLayout.size.height.toFloat() + 4f),
-      )
-
-      drawText(textLayoutResult = textLayout, topLeft = Offset(labelX, labelY))
-    }
+  fun rssiToY(rssi: Int): Float {
+    val clampedRssi = rssi.coerceIn(config.minRssi.toInt(), config.maxRssi.toInt())
+    return canvasHeight - ((clampedRssi - config.minRssi) / config.rssiRange) * canvasHeight
   }
 }
 
-private fun DrawScope.drawGrid(width: Float, height: Float, color: Color) {
-  // X-Axis Labels (Frequency) every 20MHz
-  // Y-Axis Labels (RSSI) every 20dBm
+/** Color scheme for the spectrum graph. */
+private data class GraphColors(
+    val axis: Color,
+    val wifiStroke: Color,
+    val wifiFill: Color,
+    val zigbeeTop3: Color,
+    val zigbeeRecommended: Color,
+    val zigbeeRegular: Color,
+    val labelBackground: Color,
+)
 
-  // Simple baseline
-  drawLine(color = color, start = Offset(0f, height), end = Offset(width, height), strokeWidth = 2f)
+@Composable
+fun SpectrumGraph(
+    wifiScanResults: List<WifiNetwork>,
+    zigbeeCongestion: List<ZigbeeChannelCongestion>,
+    top3ChannelNumbers: Set<Int>,
+    modifier: Modifier = Modifier,
+) {
+  val textMeasurer = rememberTextMeasurer()
+  val config = remember { GraphConfig() }
+
+  val colors =
+      GraphColors(
+          axis = MaterialTheme.colorScheme.outline,
+          wifiStroke = MaterialTheme.colorScheme.tertiary,
+          wifiFill = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
+          zigbeeTop3 = MaterialTheme.colorScheme.primary,
+          zigbeeRecommended = MaterialTheme.colorScheme.secondary,
+          zigbeeRegular = MaterialTheme.colorScheme.outlineVariant,
+          labelBackground = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+      )
+
+  Canvas(modifier = modifier) {
+    val mapper = CoordinateMapper(config, size.width, size.height)
+
+    drawGrid(size.width, size.height, colors.axis, config)
+
+    drawWifiSignals(wifiScanResults, mapper, config, colors)
+
+    drawZigbeeMarkers(zigbeeCongestion, top3ChannelNumbers, mapper, config, colors, textMeasurer)
+  }
+}
+
+/** Draws the WiFi signal curves on the canvas. */
+private fun DrawScope.drawWifiSignals(
+    networks: List<WifiNetwork>,
+    mapper: CoordinateMapper,
+    config: GraphConfig,
+    colors: GraphColors,
+) {
+  // Pre-calculate Gaussian constants to avoid recalculation for each network
+  val twoSigmaSquared = 2 * config.wifiCurveSigma * config.wifiCurveSigma
+  val halfBandwidth = config.wifiBandwidthMhz / 2f
+  val stepSize = config.wifiBandwidthMhz / config.wifiCurveSteps
+  val baseY = mapper.rssiToY(-100) // Bottom of the graph
+
+  networks.forEach { network ->
+    val centerFreq = network.frequency.toFloat()
+    val peakY = mapper.rssiToY(network.rssi)
+
+    val path =
+        buildWifiPath(
+            centerFreq,
+            peakY,
+            baseY,
+            halfBandwidth,
+            stepSize,
+            config.wifiCurveSteps,
+            twoSigmaSquared,
+            mapper,
+        )
+
+    // Draw filled area first, then stroke on top
+    drawPath(path = path, color = colors.wifiFill)
+    drawPath(
+        path = path,
+        color = colors.wifiStroke,
+        style = Stroke(width = config.wifiStrokeWidth.toPx()),
+    )
+  }
+}
+
+/** Builds a Path representing a WiFi signal using a Gaussian curve. */
+private fun buildWifiPath(
+    centerFreq: Float,
+    peakY: Float,
+    baseY: Float,
+    halfBandwidth: Float,
+    stepSize: Float,
+    steps: Int,
+    twoSigmaSquared: Double,
+    mapper: CoordinateMapper,
+): Path {
+  val path = Path()
+  val startFreq = centerFreq - halfBandwidth
+  val endFreq = centerFreq + halfBandwidth
+  val yRange = baseY - peakY
+
+  path.moveTo(mapper.freqToX(startFreq), baseY)
+
+  for (i in 0..steps) {
+    val freq = startFreq + i * stepSize
+    val x = mapper.freqToX(freq)
+
+    // Calculate Gaussian shape factor
+    val freqDiff = freq - centerFreq
+    val shapeFactor = exp(-(freqDiff * freqDiff) / twoSigmaSquared).toFloat()
+    val y = baseY - yRange * shapeFactor
+
+    path.lineTo(x, y)
+  }
+
+  path.lineTo(mapper.freqToX(endFreq), baseY)
+  path.close()
+
+  return path
+}
+
+/** Draws Zigbee channel markers with labels. */
+private fun DrawScope.drawZigbeeMarkers(
+    channels: List<ZigbeeChannelCongestion>,
+    top3Channels: Set<Int>,
+    mapper: CoordinateMapper,
+    config: GraphConfig,
+    colors: GraphColors,
+    textMeasurer: TextMeasurer,
+) {
+  val labelTopMargin = config.zigbeeLabelTopMargin.toPx()
+  val backgroundPadding = config.labelBackgroundPadding.toPx()
+
+  channels.forEach { channel ->
+    val x = mapper.freqToX(channel.centerFrequency)
+    val isTop3 = channel.channelNumber in top3Channels
+
+    val color = getZigbeeColor(isTop3, channel.isZllRecommended, colors)
+    val strokeWidth =
+        if (isTop3) config.zigbeeTop3StrokeWidth.toPx() else config.zigbeeRegularStrokeWidth.toPx()
+
+    // Measure and draw channel number label
+    val textLayout =
+        textMeasurer.measure(
+            text = channel.channelNumber.toString(),
+            style =
+                TextStyle(
+                    color = color,
+                    fontSize = TextUnit.Unspecified,
+                    fontWeight = if (isTop3) FontWeight.Bold else FontWeight.Normal,
+                ),
+        )
+
+    val labelX = x - textLayout.size.width / 2f
+    val lineStartY = labelTopMargin + textLayout.size.height + backgroundPadding
+
+    // Draw vertical line
+    drawLine(
+        color = color,
+        start = Offset(x, lineStartY),
+        end = Offset(x, size.height),
+        strokeWidth = strokeWidth,
+    )
+
+    // Draw label background for readability
+    drawRect(
+        color = colors.labelBackground,
+        topLeft = Offset(labelX - backgroundPadding, labelTopMargin - 2f),
+        size = Size(textLayout.size.width + backgroundPadding * 2f, textLayout.size.height + 4f),
+    )
+
+    // Draw label text
+    drawText(textLayoutResult = textLayout, topLeft = Offset(labelX, labelTopMargin))
+  }
+}
+
+/** Determines the appropriate color for a Zigbee channel marker. */
+private fun getZigbeeColor(isTop3: Boolean, isRecommended: Boolean, colors: GraphColors): Color =
+    when {
+      isTop3 -> colors.zigbeeTop3
+      isRecommended -> colors.zigbeeRecommended
+      else -> colors.zigbeeRegular.copy(alpha = 0.5f)
+    }
+
+/** Draws the grid lines and axes. */
+private fun DrawScope.drawGrid(width: Float, height: Float, color: Color, config: GraphConfig) {
+  // Draw baseline (X-axis)
+  drawLine(
+      color = color,
+      start = Offset(0f, height),
+      end = Offset(width, height),
+      strokeWidth = config.gridLineWidth,
+  )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun SpectrumGraphPreview() {
   val mockWifi =
-    listOf(
-      WifiNetwork("Net 1", 2412, -40),
-      WifiNetwork("Net 2", 2437, -65),
-      WifiNetwork("Net 3", 2462, -50),
-    )
+      listOf(
+          WifiNetwork("Net 1", 2412, -40),
+          WifiNetwork("Net 2", 2437, -65),
+          WifiNetwork("Net 3", 2462, -50),
+      )
 
   val mockZigbee =
-    (11..26).map {
-      ZigbeeChannelCongestion(
-        it,
-        2405 + 5 * (it - 11),
-        if (it in listOf(15, 20, 25)) 0.0 else 100.0,
-      )
-    }
+      (11..26).map {
+        ZigbeeChannelCongestion(
+            channelNumber = it,
+            centerFrequency = 2405 + 5 * (it - 11),
+            congestionScore = if (it in listOf(15, 20, 25)) 0.0 else 100.0,
+            isZllRecommended = it in listOf(15, 20, 25),
+        )
+      }
 
-  dev.sebastiano.channelor.ui.theme.ChannelorTheme {
+  ChannelorTheme {
     Surface {
       Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         SpectrumGraph(
-          wifiScanResults = mockWifi,
-          zigbeeCongestion = mockZigbee,
-          top3ChannelNumbers = setOf(15, 20, 25),
-          modifier = Modifier.fillMaxSize(),
+            wifiScanResults = mockWifi,
+            zigbeeCongestion = mockZigbee,
+            top3ChannelNumbers = setOf(15, 20, 25),
+            modifier = Modifier.fillMaxSize(),
         )
       }
     }
