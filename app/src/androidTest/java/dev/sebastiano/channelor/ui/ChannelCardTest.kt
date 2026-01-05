@@ -9,38 +9,38 @@ import org.junit.Test
 
 class ChannelCardTest {
 
-  @get:Rule val composeTestRule = createComposeRule()
+    @get:Rule val composeTestRule = createComposeRule()
 
-  @Test
-  fun channelCard_displaysChannelNumber() {
-    val channel =
-      ZigbeeChannelCongestion(
-        channelNumber = 11,
-        centerFrequency = 2405,
-        congestionScore = 0.0,
-        isZllRecommended = true,
-      )
+    @Test
+    fun channelCard_displaysChannelNumber() {
+        val channel =
+            ZigbeeChannelCongestion(
+                channelNumber = 11,
+                centerFrequency = 2405,
+                congestionScore = 0.0,
+                isZllRecommended = true,
+            )
 
-    composeTestRule.setContent { ChannelorTheme { ChannelCard(channel) } }
+        composeTestRule.setContent { ChannelorTheme { ChannelCard(channel) } }
 
-    composeTestRule.onNodeWithText("CH 11").assertExists()
-    composeTestRule.onNodeWithText("2405 MHz").assertExists()
-    composeTestRule.onNodeWithText("ZLL Recommended").assertExists()
-  }
+        composeTestRule.onNodeWithText("CH 11").assertExists()
+        composeTestRule.onNodeWithText("2405 MHz").assertExists()
+        composeTestRule.onNodeWithText("ZLL Recommended").assertExists()
+    }
 
-  @Test
-  fun channelCard_displaysAnnotation() {
-    val channel =
-      ZigbeeChannelCongestion(
-        channelNumber = 26,
-        centerFrequency = 2480,
-        congestionScore = 0.0,
-        annotation = "Problematic",
-      )
+    @Test
+    fun channelCard_displaysAnnotation() {
+        val channel =
+            ZigbeeChannelCongestion(
+                channelNumber = 26,
+                centerFrequency = 2480,
+                congestionScore = 0.0,
+                annotation = "Problematic",
+            )
 
-    composeTestRule.setContent { ChannelorTheme { ChannelCard(channel) } }
+        composeTestRule.setContent { ChannelorTheme { ChannelCard(channel) } }
 
-    composeTestRule.onNodeWithText("CH 26").assertExists()
-    composeTestRule.onNodeWithText("Problematic").assertExists()
-  }
+        composeTestRule.onNodeWithText("CH 26").assertExists()
+        composeTestRule.onNodeWithText("Problematic").assertExists()
+    }
 }

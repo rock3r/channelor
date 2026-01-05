@@ -6,43 +6,43 @@ import org.junit.Test
 
 class ZigbeeAnalyzerTest {
 
-  private val analyzer = ZigbeeAnalyzer()
+    private val analyzer = ZigbeeAnalyzer()
 
-  @Test
-  fun `analyzeCongestion returns 16 channels`() {
-    val results = analyzer.analyzeCongestion(emptyList())
-    assertEquals(16, results.size)
-    assertEquals(11, results.first().channelNumber)
-    assertEquals(26, results.last().channelNumber)
-  }
+    @Test
+    fun `analyzeCongestion returns 16 channels`() {
+        val results = analyzer.analyzeCongestion(emptyList())
+        assertEquals(16, results.size)
+        assertEquals(11, results.first().channelNumber)
+        assertEquals(26, results.last().channelNumber)
+    }
 
-  @Test
-  fun `calculateCongestion with no wifi return zero scores`() {
-    val results = analyzer.analyzeCongestion(emptyList())
-    results.forEach { assertEquals(0.0, it.congestionScore, 0.001) }
-  }
+    @Test
+    fun `calculateCongestion with no wifi return zero scores`() {
+        val results = analyzer.analyzeCongestion(emptyList())
+        results.forEach { assertEquals(0.0, it.congestionScore, 0.001) }
+    }
 
-  @Test
-  fun `calculateCongestion with overlapping wifi returns positive scores`() {
-    // Wi-Fi Channel 1 is at 2412 MHz
-    // Zigbee Channel 11 is at 2405 MHz
-    // They overlap (dist = 7 MHz < 11 MHz)
-    val wifi = listOf(WifiNetwork("Net1", 2412, -40))
-    val results = analyzer.analyzeCongestion(wifi)
+    @Test
+    fun `calculateCongestion with overlapping wifi returns positive scores`() {
+        // Wi-Fi Channel 1 is at 2412 MHz
+        // Zigbee Channel 11 is at 2405 MHz
+        // They overlap (dist = 7 MHz < 11 MHz)
+        val wifi = listOf(WifiNetwork("Net1", 2412, -40))
+        val results = analyzer.analyzeCongestion(wifi)
 
-    val ch11 = results.find { it.channelNumber == 11 }!!
-    assertTrue("CH11 should have congestion score > 0", ch11.congestionScore > 0)
+        val ch11 = results.find { it.channelNumber == 11 }!!
+        assertTrue("CH11 should have congestion score > 0", ch11.congestionScore > 0)
 
-    // Zigbee Channel 26 is at 2480 MHz
-    // Far from Wi-Fi Channel 1 (dist = 68 MHz)
-    val ch26 = results.find { it.channelNumber == 26 }!!
-    assertEquals(0.0, ch26.congestionScore, 0.001)
-  }
+        // Zigbee Channel 26 is at 2480 MHz
+        // Far from Wi-Fi Channel 1 (dist = 68 MHz)
+        val ch26 = results.find { it.channelNumber == 26 }!!
+        assertEquals(0.0, ch26.congestionScore, 0.001)
+    }
 
-  @Test
-  fun `ZLL recommended channels are correctly marked`() {
-    val results = analyzer.analyzeCongestion(emptyList())
-    val recommended = results.filter { it.isZllRecommended }.map { it.channelNumber }
-    assertEquals(listOf(11, 15, 20, 25), recommended)
-  }
+    @Test
+    fun `ZLL recommended channels are correctly marked`() {
+        val results = analyzer.analyzeCongestion(emptyList())
+        val recommended = results.filter { it.isZllRecommended }.map { it.channelNumber }
+        assertEquals(listOf(11, 15, 20, 25), recommended)
+    }
 }
