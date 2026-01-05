@@ -47,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import dev.sebastiano.channelor.domain.WifiNetwork
 import dev.sebastiano.channelor.domain.ZigbeeChannelCongestion
 import dev.sebastiano.channelor.ui.theme.ChannelorTheme
 
@@ -183,13 +184,13 @@ fun DashboardInitialScanningPreview() {
 fun DashboardResultsPreview() {
     val mockWifi =
         listOf(
-            dev.sebastiano.channelor.domain.WifiNetwork("Neighbors-2G", 2412, -45),
-            dev.sebastiano.channelor.domain.WifiNetwork("MyHome-2G", 2437, -30),
-            dev.sebastiano.channelor.domain.WifiNetwork("IoT-Devices", 2462, -60),
+            WifiNetwork("Neighbors-2G", 2412, -45),
+            WifiNetwork("MyHome-2G", 2437, -30),
+            WifiNetwork("IoT-Devices", 2462, -60),
         )
     val mockZigbee =
         (11..26).map {
-            dev.sebastiano.channelor.domain.ZigbeeChannelCongestion(
+            ZigbeeChannelCongestion(
                 channelNumber = it,
                 centerFrequency = 2405 + 5 * (it - 11),
                 congestionScore = if (it in listOf(15, 20, 25)) 10.0 else 80.0,
@@ -215,13 +216,13 @@ fun DashboardResultsPreview() {
 fun DashboardScanningWithResultsPreview() {
     val mockWifi =
         listOf(
-            dev.sebastiano.channelor.domain.WifiNetwork("Neighbors-2G", 2412, -45),
-            dev.sebastiano.channelor.domain.WifiNetwork("MyHome-2G", 2437, -30),
-            dev.sebastiano.channelor.domain.WifiNetwork("IoT-Devices", 2462, -60),
+            WifiNetwork("Neighbors-2G", 2412, -45),
+            WifiNetwork("MyHome-2G", 2437, -30),
+            WifiNetwork("IoT-Devices", 2462, -60),
         )
     val mockZigbee =
         (11..26).map {
-            dev.sebastiano.channelor.domain.ZigbeeChannelCongestion(
+            ZigbeeChannelCongestion(
                 channelNumber = it,
                 centerFrequency = 2405 + 5 * (it - 11),
                 congestionScore = if (it in listOf(15, 20, 25)) 10.0 else 80.0,
@@ -285,9 +286,7 @@ fun HeaderSection() {
 
 @Suppress("FunctionNaming")
 @Composable
-fun RecommendationSection(
-    topChannels: List<dev.sebastiano.channelor.domain.ZigbeeChannelCongestion>
-) {
+fun RecommendationSection(topChannels: List<ZigbeeChannelCongestion>) {
     Text(
         text = "Recommended Channels",
         style = MaterialTheme.typography.titleMedium,
@@ -315,7 +314,7 @@ fun RecommendationSection(
 
 @Suppress("FunctionNaming")
 @Composable
-fun ChannelCard(channel: dev.sebastiano.channelor.domain.ZigbeeChannelCongestion) {
+fun ChannelCard(channel: ZigbeeChannelCongestion) {
     val containerColor =
         when {
             channel.isZllRecommended -> MaterialTheme.colorScheme.primaryContainer
@@ -383,7 +382,7 @@ fun ChannelCard(channel: dev.sebastiano.channelor.domain.ZigbeeChannelCongestion
 fun ChannelCardPreview() {
     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ChannelCard(
-            dev.sebastiano.channelor.domain.ZigbeeChannelCongestion(
+            ZigbeeChannelCongestion(
                 channelNumber = 11,
                 centerFrequency = 2405,
                 congestionScore = 0.0,
@@ -392,7 +391,7 @@ fun ChannelCardPreview() {
             )
         )
         ChannelCard(
-            dev.sebastiano.channelor.domain.ZigbeeChannelCongestion(
+            ZigbeeChannelCongestion(
                 channelNumber = 15,
                 centerFrequency = 2425,
                 congestionScore = 0.0,
@@ -400,7 +399,7 @@ fun ChannelCardPreview() {
             )
         )
         ChannelCard(
-            dev.sebastiano.channelor.domain.ZigbeeChannelCongestion(
+            ZigbeeChannelCongestion(
                 channelNumber = 26,
                 centerFrequency = 2480,
                 congestionScore = 0.0,
@@ -409,7 +408,7 @@ fun ChannelCardPreview() {
             )
         )
         ChannelCard(
-            dev.sebastiano.channelor.domain.ZigbeeChannelCongestion(
+            ZigbeeChannelCongestion(
                 channelNumber = 12,
                 centerFrequency = 2410,
                 congestionScore = 0.0,

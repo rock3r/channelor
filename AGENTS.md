@@ -37,6 +37,8 @@ Channelor is an Android application designed to analyze Wi-Fi interference in th
     - `app/src/test/java/dev/sebastiano/channelor/domain/ZigbeeAnalyzerTest.kt`: Tests the core interference calculation logic.
 - **Compose UI Tests**:
     - `app/src/androidTest/java/dev/sebastiano/channelor/ui/ChannelCardTest.kt`: Tests individual UI components.
+- **Static analysis**:
+    - ALWAYS run the `check` task before deciding a task is completed.
 
 ### Presentation Layer
 - **`app/src/main/java/dev/sebastiano/channelor/ui/MainViewModel.kt`**:
