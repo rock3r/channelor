@@ -22,18 +22,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.sebastiano.channelor.R
 import dev.sebastiano.channelor.domain.WifiNetwork
 import dev.sebastiano.channelor.domain.ZigbeeChannelCongestion
 
 /** Data class representing the state of the dashboard. */
 data class DashboardState(
-    val isScanning: Boolean,
-    val zigbeeCongestion: List<ZigbeeChannelCongestion>,
-    val wifiScanResults: List<WifiNetwork>,
-    val recommendedChannels: List<ZigbeeChannelCongestion>,
-    val top3Channels: Set<Int>,
+        val isScanning: Boolean,
+        val zigbeeCongestion: List<ZigbeeChannelCongestion>,
+        val wifiScanResults: List<WifiNetwork>,
+        val recommendedChannels: List<ZigbeeChannelCongestion>,
+        val top3Channels: Set<Int>,
 )
 
 @Suppress("FunctionNaming")
@@ -41,26 +43,28 @@ data class DashboardState(
 fun SpectrumAnalysisSection(state: DashboardState, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         Text(
-            text = "Spectrum Analysis",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
+                text = stringResource(R.string.spectrum_analysis_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            colors =
-                CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                colors =
+                        CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
         ) {
             Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                 if (state.wifiScanResults.isEmpty() && state.zigbeeCongestion.isEmpty()) {
                     EmptySpectrumView(state.isScanning, modifier = Modifier.align(Alignment.Center))
                 } else {
                     SpectrumGraph(
-                        wifiScanResults = state.wifiScanResults,
-                        zigbeeCongestion = state.zigbeeCongestion,
-                        top3ChannelNumbers = state.top3Channels,
-                        modifier = Modifier.fillMaxSize(),
+                            wifiScanResults = state.wifiScanResults,
+                            zigbeeCongestion = state.zigbeeCongestion,
+                            top3ChannelNumbers = state.top3Channels,
+                            modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
@@ -74,19 +78,19 @@ private fun EmptySpectrumView(isScanning: Boolean, modifier: Modifier = Modifier
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         if (isScanning) {
             CircularProgressIndicator(
-                modifier = Modifier.size(INITIAL_SCAN_INDICATOR_SIZE),
-                color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(INITIAL_SCAN_INDICATOR_SIZE),
+                    color = MaterialTheme.colorScheme.primary,
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Performing initial scan...",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
+                    text = stringResource(R.string.performing_initial_scan),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
             )
         } else {
             Text(
-                text = "No scan data available.\nTap the button to scan.",
-                textAlign = TextAlign.Center,
+                    text = stringResource(R.string.no_scan_data_available),
+                    textAlign = TextAlign.Center,
             )
         }
     }
@@ -96,19 +100,22 @@ private fun EmptySpectrumView(isScanning: Boolean, modifier: Modifier = Modifier
 @Composable
 fun ScanningFab(isScanning: Boolean, onScanClick: () -> Unit) {
     FloatingActionButton(
-        onClick = onScanClick,
-        containerColor =
-            if (isScanning) MaterialTheme.colorScheme.surfaceVariant
-            else MaterialTheme.colorScheme.primaryContainer,
+            onClick = onScanClick,
+            containerColor =
+                    if (isScanning) MaterialTheme.colorScheme.surfaceVariant
+                    else MaterialTheme.colorScheme.primaryContainer,
     ) {
         if (isScanning) {
             CircularProgressIndicator(
-                modifier = Modifier.size(SCANNING_INDICATOR_SIZE),
-                strokeWidth = SCANNING_INDICATOR_STROKE_WIDTH,
-                color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(SCANNING_INDICATOR_SIZE),
+                    strokeWidth = SCANNING_INDICATOR_STROKE_WIDTH,
+                    color = MaterialTheme.colorScheme.primary,
             )
         } else {
-            Icon(Icons.Rounded.Refresh, contentDescription = "Scan")
+            Icon(
+                    androidx.compose.material.icons.Icons.Rounded.Refresh,
+                    contentDescription = stringResource(R.string.cd_scan)
+            )
         }
     }
 }
@@ -117,16 +124,18 @@ fun ScanningFab(isScanning: Boolean, onScanClick: () -> Unit) {
 @Composable
 fun ScanningStatusCard(modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier,
-        colors =
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            modifier = modifier,
+            colors =
+                    CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Text(
-            text = "Scanning Wi-Fi networks...",
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                text = stringResource(R.string.scanning_wifi_networks),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
         )
     }
 }

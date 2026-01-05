@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import dev.sebastiano.channelor.R
 import dev.sebastiano.channelor.domain.WifiNetwork
 import dev.sebastiano.channelor.domain.ZigbeeChannelCongestion
 import dev.sebastiano.channelor.ui.theme.ChannelorTheme
@@ -62,496 +64,551 @@ import dev.sebastiano.channelor.ui.theme.ChannelorTheme
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DashboardScreen(viewModel: MainViewModel = hiltViewModel()) {
-    val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
-    val isScanning by viewModel.isScanning.collectAsState()
-    val zigbeeCongestion by viewModel.zigbeeCongestion.collectAsState()
-    val wifiScanResults by viewModel.wifiScanResults.collectAsState()
-    val recommendedChannels by viewModel.recommendedChannels.collectAsState()
-    val top3Channels by viewModel.top3Channels.collectAsState()
+        val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+        val isScanning by viewModel.isScanning.collectAsState()
+        val zigbeeCongestion by viewModel.zigbeeCongestion.collectAsState()
+        val wifiScanResults by viewModel.wifiScanResults.collectAsState()
+        val recommendedChannels by viewModel.recommendedChannels.collectAsState()
+        val top3Channels by viewModel.top3Channels.collectAsState()
 
-    LaunchedEffect(permissionState.status) {
-        if (permissionState.status.isGranted) {
-            viewModel.onPermissionResult(true)
-        } else {
-            permissionState.launchPermissionRequest()
+        LaunchedEffect(permissionState.status) {
+                if (permissionState.status.isGranted) {
+                        viewModel.onPermissionResult(true)
+                } else {
+                        permissionState.launchPermissionRequest()
+                }
         }
-    }
 
-    DashboardContent(
-        state =
-            DashboardState(
-                isScanning = isScanning,
-                zigbeeCongestion = zigbeeCongestion,
-                wifiScanResults = wifiScanResults,
-                recommendedChannels = recommendedChannels,
-                top3Channels = top3Channels,
-            ),
-        onScanClick = {
-            if (permissionState.status.isGranted) {
-                viewModel.triggerScan()
-            } else {
-                permissionState.launchPermissionRequest()
-            }
-        },
-    )
+        DashboardContent(
+                state =
+                        DashboardState(
+                                isScanning = isScanning,
+                                zigbeeCongestion = zigbeeCongestion,
+                                wifiScanResults = wifiScanResults,
+                                recommendedChannels = recommendedChannels,
+                                top3Channels = top3Channels,
+                        ),
+                onScanClick = {
+                        if (permissionState.status.isGranted) {
+                                viewModel.triggerScan()
+                        } else {
+                                permissionState.launchPermissionRequest()
+                        }
+                },
+        )
 }
 
 @Suppress("FunctionNaming")
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardContent(state: DashboardState, onScanClick: () -> Unit) {
-    var selectedChannel by remember { mutableStateOf<ZigbeeChannelCongestion?>(null) }
-    val sheetState = rememberModalBottomSheetState()
+        var selectedChannel by remember { mutableStateOf<ZigbeeChannelCongestion?>(null) }
+        val sheetState = rememberModalBottomSheetState()
 
-    Scaffold(
-        floatingActionButton = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val density = LocalDensity.current
-                AnimatedVisibility(
-                    visible = state.isScanning,
-                    enter = fadeIn() + slideInHorizontally { with(density) { 20.dp.roundToPx() } },
-                    exit = fadeOut() + slideOutHorizontally { with(density) { 20.dp.roundToPx() } },
-                ) {
-                    ScanningStatusCard(modifier = Modifier.padding(end = 16.dp))
+        Scaffold(
+                floatingActionButton = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                val density = LocalDensity.current
+                                AnimatedVisibility(
+                                        visible = state.isScanning,
+                                        enter =
+                                                fadeIn() +
+                                                        slideInHorizontally {
+                                                                with(density) { 20.dp.roundToPx() }
+                                                        },
+                                        exit =
+                                                fadeOut() +
+                                                        slideOutHorizontally {
+                                                                with(density) { 20.dp.roundToPx() }
+                                                        },
+                                ) { ScanningStatusCard(modifier = Modifier.padding(end = 16.dp)) }
+                                ScanningFab(
+                                        isScanning = state.isScanning,
+                                        onScanClick = onScanClick
+                                )
+                        }
                 }
-                ScanningFab(isScanning = state.isScanning, onScanClick = onScanClick)
-            }
+        ) { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                        Column(
+                                modifier =
+                                        Modifier.fillMaxSize()
+                                                .padding(
+                                                        top = 6.dp,
+                                                        bottom = 80.dp
+                                                ) // Avoid overlap with FAB
+                                                .padding(16.dp)
+                        ) {
+                                HeaderSection()
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                RecommendationSection(state.recommendedChannels) {
+                                        selectedChannel = it
+                                }
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                SpectrumAnalysisSection(
+                                        state = state,
+                                        modifier = Modifier.weight(1f)
+                                )
+                        }
+
+                        if (state.isScanning) {
+                                LinearProgressIndicator(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.primary,
+                                )
+                        }
+                }
         }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            Column(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .padding(top = 6.dp, bottom = 80.dp) // Avoid overlap with FAB
-                        .padding(16.dp)
-            ) {
-                HeaderSection()
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                RecommendationSection(state.recommendedChannels) { selectedChannel = it }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                SpectrumAnalysisSection(state = state, modifier = Modifier.weight(1f))
-            }
-
-            if (state.isScanning) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
+        if (selectedChannel != null) {
+                ModalBottomSheet(
+                        onDismissRequest = { selectedChannel = null },
+                        sheetState = sheetState
+                ) { ChannelDetailsContent(channel = selectedChannel!!) }
         }
-    }
-
-    if (selectedChannel != null) {
-        ModalBottomSheet(onDismissRequest = { selectedChannel = null }, sheetState = sheetState) {
-            ChannelDetailsContent(channel = selectedChannel!!)
-        }
-    }
 }
 
 @Suppress("MagicNumber", "FunctionNaming")
 @Preview(name = "Initial / Empty State", showBackground = true)
 @Composable
 fun DashboardEmptyPreview() {
-    ChannelorTheme {
-        DashboardContent(
-            state =
-                DashboardState(
-                    isScanning = false,
-                    zigbeeCongestion = emptyList(),
-                    wifiScanResults = emptyList(),
-                    recommendedChannels = emptyList(),
-                    top3Channels = emptySet(),
-                ),
-            onScanClick = {},
-        )
-    }
+        ChannelorTheme {
+                DashboardContent(
+                        state =
+                                DashboardState(
+                                        isScanning = false,
+                                        zigbeeCongestion = emptyList(),
+                                        wifiScanResults = emptyList(),
+                                        recommendedChannels = emptyList(),
+                                        top3Channels = emptySet(),
+                                ),
+                        onScanClick = {},
+                )
+        }
 }
 
 @Suppress("MagicNumber", "FunctionNaming")
 @Preview(name = "Initial Scanning", showBackground = true)
 @Composable
 fun DashboardInitialScanningPreview() {
-    ChannelorTheme {
-        DashboardContent(
-            state =
-                DashboardState(
-                    isScanning = true,
-                    zigbeeCongestion = emptyList(),
-                    wifiScanResults = emptyList(),
-                    recommendedChannels = emptyList(),
-                    top3Channels = emptySet(),
-                ),
-            onScanClick = {},
-        )
-    }
+        ChannelorTheme {
+                DashboardContent(
+                        state =
+                                DashboardState(
+                                        isScanning = true,
+                                        zigbeeCongestion = emptyList(),
+                                        wifiScanResults = emptyList(),
+                                        recommendedChannels = emptyList(),
+                                        top3Channels = emptySet(),
+                                ),
+                        onScanClick = {},
+                )
+        }
 }
 
 @Suppress("MagicNumber", "FunctionNaming")
 @Preview(name = "Results (Light Mode)", showBackground = true)
 @Preview(
-    name = "Results (Dark Mode)",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+        name = "Results (Dark Mode)",
+        showBackground = true,
+        uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
 )
 @Composable
 fun DashboardResultsPreview() {
-    val mockWifi =
-        listOf(
-            WifiNetwork("Neighbors-2G", 2412, -45),
-            WifiNetwork("MyHome-2G", 2437, -30),
-            WifiNetwork("IoT-Devices", 2462, -60),
-        )
-    val mockZigbee =
-        (11..26).map {
-            ZigbeeChannelCongestion(
-                channelNumber = it,
-                centerFrequency = 2405 + 5 * (it - 11),
-                congestionScore = if (it in listOf(15, 20, 25)) 10.0 else 80.0,
-                isZllRecommended = it in listOf(11, 15, 20, 25),
-            )
-        }
+        val mockWifi =
+                listOf(
+                        WifiNetwork("Neighbors-2G", 2412, -45),
+                        WifiNetwork("MyHome-2G", 2437, -30),
+                        WifiNetwork("IoT-Devices", 2462, -60),
+                )
+        val mockZigbee =
+                (11..26).map {
+                        ZigbeeChannelCongestion(
+                                channelNumber = it,
+                                centerFrequency = 2405 + 5 * (it - 11),
+                                congestionScore = if (it in listOf(15, 20, 25)) 10.0 else 80.0,
+                                isZllRecommended = it in listOf(11, 15, 20, 25),
+                        )
+                }
 
-    val state =
-        DashboardState(
-            isScanning = false,
-            zigbeeCongestion = mockZigbee,
-            wifiScanResults = mockWifi,
-            recommendedChannels = mockZigbee.filter { it.channelNumber in setOf(15, 20, 25) },
-            top3Channels = setOf(15, 20, 25),
-        )
+        val state =
+                DashboardState(
+                        isScanning = false,
+                        zigbeeCongestion = mockZigbee,
+                        wifiScanResults = mockWifi,
+                        recommendedChannels =
+                                mockZigbee.filter { it.channelNumber in setOf(15, 20, 25) },
+                        top3Channels = setOf(15, 20, 25),
+                )
 
-    ChannelorTheme { DashboardContent(state = state, onScanClick = {}) }
+        ChannelorTheme { DashboardContent(state = state, onScanClick = {}) }
 }
 
 @Suppress("MagicNumber", "FunctionNaming")
 @Preview(name = "Scanning with Results", showBackground = true)
 @Composable
 fun DashboardScanningWithResultsPreview() {
-    val mockWifi =
-        listOf(
-            WifiNetwork("Neighbors-2G", 2412, -45),
-            WifiNetwork("MyHome-2G", 2437, -30),
-            WifiNetwork("IoT-Devices", 2462, -60),
-        )
-    val mockZigbee =
-        (11..26).map {
-            ZigbeeChannelCongestion(
-                channelNumber = it,
-                centerFrequency = 2405 + 5 * (it - 11),
-                congestionScore = if (it in listOf(15, 20, 25)) 10.0 else 80.0,
-                isZllRecommended = it in listOf(11, 15, 20, 25),
-            )
-        }
+        val mockWifi =
+                listOf(
+                        WifiNetwork("Neighbors-2G", 2412, -45),
+                        WifiNetwork("MyHome-2G", 2437, -30),
+                        WifiNetwork("IoT-Devices", 2462, -60),
+                )
+        val mockZigbee =
+                (11..26).map {
+                        ZigbeeChannelCongestion(
+                                channelNumber = it,
+                                centerFrequency = 2405 + 5 * (it - 11),
+                                congestionScore = if (it in listOf(15, 20, 25)) 10.0 else 80.0,
+                                isZllRecommended = it in listOf(11, 15, 20, 25),
+                        )
+                }
 
-    val state =
-        DashboardState(
-            isScanning = true,
-            zigbeeCongestion = mockZigbee,
-            wifiScanResults = mockWifi,
-            recommendedChannels = mockZigbee.filter { it.channelNumber in setOf(15, 20, 25) },
-            top3Channels = setOf(15, 20, 25),
-        )
+        val state =
+                DashboardState(
+                        isScanning = true,
+                        zigbeeCongestion = mockZigbee,
+                        wifiScanResults = mockWifi,
+                        recommendedChannels =
+                                mockZigbee.filter { it.channelNumber in setOf(15, 20, 25) },
+                        top3Channels = setOf(15, 20, 25),
+                )
 
-    ChannelorTheme { DashboardContent(state = state, onScanClick = {}) }
+        ChannelorTheme { DashboardContent(state = state, onScanClick = {}) }
 }
 
 @Suppress("FunctionNaming")
 @Composable
 fun HeaderSection() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier =
-                Modifier.size(40.dp)
-                    .background(
-                        brush =
-                            Brush.linearGradient(
-                                colors =
-                                    listOf(
-                                        MaterialTheme.colorScheme.primary,
-                                        MaterialTheme.colorScheme.secondary,
-                                    )
-                            ),
-                        shape = CircleShape,
-                    ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Rounded.Wifi,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                        modifier =
+                                Modifier.size(40.dp)
+                                        .background(
+                                                brush =
+                                                        Brush.linearGradient(
+                                                                colors =
+                                                                        listOf(
+                                                                                MaterialTheme
+                                                                                        .colorScheme
+                                                                                        .primary,
+                                                                                MaterialTheme
+                                                                                        .colorScheme
+                                                                                        .secondary,
+                                                                        )
+                                                        ),
+                                                shape = CircleShape,
+                                        ),
+                        contentAlignment = Alignment.Center,
+                ) {
+                        Icon(
+                                Icons.Rounded.Wifi,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                        )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                        Text(
+                                text = stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                                text = stringResource(R.string.app_subtitle),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary,
+                        )
+                }
         }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(
-                text = "Channelor",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = "Zigbee Interference Analyzer",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary,
-            )
-        }
-    }
 }
 
 @Suppress("FunctionNaming")
 @Composable
 fun RecommendationSection(
-    topChannels: List<ZigbeeChannelCongestion>,
-    onChannelClick: (ZigbeeChannelCongestion) -> Unit,
+        topChannels: List<ZigbeeChannelCongestion>,
+        onChannelClick: (ZigbeeChannelCongestion) -> Unit,
 ) {
-    Text(
-        text = "Recommended Channels",
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.primary,
-    )
-    Spacer(modifier = Modifier.height(8.dp))
+        Text(
+                text = stringResource(R.string.recommended_channels_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
 
-    if (topChannels.isEmpty()) {
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Scan to see recommendations",
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodyMedium,
-            )
+        if (topChannels.isEmpty()) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                                text = stringResource(R.string.scan_to_see_recommendations),
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                        )
+                }
+        } else {
+                LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                ) {
+                        items(topChannels) { channel ->
+                                ChannelCard(
+                                        channel = channel,
+                                        onClick = { onChannelClick(channel) }
+                                )
+                        }
+                }
         }
-    } else {
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp),
-        ) {
-            items(topChannels) { channel ->
-                ChannelCard(channel = channel, onClick = { onChannelClick(channel) })
-            }
-        }
-    }
 }
 
 @Suppress("FunctionNaming")
 @Composable
 fun ChannelCard(channel: ZigbeeChannelCongestion, onClick: () -> Unit) {
-    val containerColor =
-        when {
-            channel.isZllRecommended -> MaterialTheme.colorScheme.primaryContainer
-            channel.isWarning -> MaterialTheme.colorScheme.errorContainer
-            else -> MaterialTheme.colorScheme.secondaryContainer
-        }
-
-    val onContainerColor =
-        when {
-            channel.isZllRecommended -> MaterialTheme.colorScheme.onPrimaryContainer
-            channel.isWarning -> MaterialTheme.colorScheme.onErrorContainer
-            else -> MaterialTheme.colorScheme.onSecondaryContainer
-        }
-
-    Card(
-        modifier = Modifier.size(width = 160.dp, height = 120.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        onClick = onClick,
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Icon(
-                imageVector = Icons.Rounded.Info,
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(16.dp),
-                tint = onContainerColor.copy(alpha = 0.5f),
-            )
-
-            Column(
-                modifier = Modifier.fillMaxSize().padding(12.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = "CH ${channel.channelNumber}",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = onContainerColor,
-                )
-                Text(
-                    text = "${channel.centerFrequency} MHz",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = onContainerColor.copy(alpha = 0.7f),
-                )
-                if (channel.isZllRecommended) {
-                    Text(
-                        text = "ZLL Recommended",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = onContainerColor,
-                    )
+        val containerColor =
+                when {
+                        channel.isZllRecommended -> MaterialTheme.colorScheme.primaryContainer
+                        channel.isWarning -> MaterialTheme.colorScheme.errorContainer
+                        else -> MaterialTheme.colorScheme.secondaryContainer
                 }
-            }
+
+        val onContainerColor =
+                when {
+                        channel.isZllRecommended -> MaterialTheme.colorScheme.onPrimaryContainer
+                        channel.isWarning -> MaterialTheme.colorScheme.onErrorContainer
+                        else -> MaterialTheme.colorScheme.onSecondaryContainer
+                }
+
+        Card(
+                modifier = Modifier.size(width = 160.dp, height = 120.dp),
+                colors = CardDefaults.cardColors(containerColor = containerColor),
+                onClick = onClick,
+        ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                                imageVector = Icons.Rounded.Info,
+                                contentDescription = null,
+                                modifier =
+                                        Modifier.align(Alignment.TopEnd).padding(8.dp).size(16.dp),
+                                tint = onContainerColor.copy(alpha = 0.5f),
+                        )
+
+                        Column(
+                                modifier = Modifier.fillMaxSize().padding(12.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                                Text(
+                                        text =
+                                                stringResource(
+                                                        R.string.channel_number_format,
+                                                        channel.channelNumber
+                                                ),
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = onContainerColor,
+                                )
+                                Text(
+                                        text =
+                                                stringResource(
+                                                        R.string.frequency_format,
+                                                        channel.centerFrequency
+                                                ),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = onContainerColor.copy(alpha = 0.7f),
+                                )
+                                if (channel.isZllRecommended) {
+                                        Text(
+                                                text = stringResource(R.string.zll_recommended),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = onContainerColor,
+                                        )
+                                }
+                        }
+                }
         }
-    }
 }
 
 @Suppress("FunctionNaming")
 @Composable
 fun ChannelDetailsContent(channel: ZigbeeChannelCongestion) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 8.dp, bottom = 48.dp)
-    ) {
-        Text(
-            text = "Channel ${channel.channelNumber} Details",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            text = "Center frequency: ${channel.centerFrequency} MHz",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.secondary,
-        )
+        Column(
+                modifier =
+                        Modifier.fillMaxWidth()
+                                .padding(horizontal = 24.dp)
+                                .padding(top = 8.dp, bottom = 48.dp)
+        ) {
+                Text(
+                        text =
+                                stringResource(
+                                        R.string.channel_details_title,
+                                        channel.channelNumber
+                                ),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                )
+                Text(
+                        text =
+                                stringResource(
+                                        R.string.center_frequency_format,
+                                        channel.centerFrequency
+                                ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary,
+                )
 
-        Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-        if (channel.pros.isNotEmpty()) {
-            Text(
-                text = "Pros",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            channel.pros.forEach { pro ->
-                Row(
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.ThumbUp,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(text = pro, style = MaterialTheme.typography.bodyMedium)
+                if (channel.pros.isNotEmpty()) {
+                        Text(
+                                text = stringResource(R.string.pros),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        channel.pros.forEach { proResId ->
+                                Row(
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                        Icon(
+                                                imageVector = Icons.Rounded.ThumbUp,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp),
+                                                tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                                text = stringResource(proResId),
+                                                style = MaterialTheme.typography.bodyMedium
+                                        )
+                                }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                 }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
 
-        if (channel.cons.isNotEmpty()) {
-            Text(
-                text = "Cons",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.error,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            channel.cons.forEach { con ->
-                Row(
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.ThumbDown,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.error,
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(text = con, style = MaterialTheme.typography.bodyMedium)
+                if (channel.cons.isNotEmpty()) {
+                        Text(
+                                text = stringResource(R.string.cons),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        channel.cons.forEach { conResId ->
+                                Row(
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                        Icon(
+                                                imageVector = Icons.Rounded.ThumbDown,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp),
+                                                tint = MaterialTheme.colorScheme.error,
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                                text = stringResource(conResId),
+                                                style = MaterialTheme.typography.bodyMedium
+                                        )
+                                }
+                        }
                 }
-            }
         }
-    }
 }
 
 @Suppress("MagicNumber", "FunctionNaming")
 @Preview(name = "Light Mode", showBackground = true)
 @Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+        name = "Dark Mode",
+        showBackground = true,
+        uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
 )
 @Composable
 fun ChannelCardPreview() {
-    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ChannelCard(
-            channel =
-                ZigbeeChannelCongestion(
-                    channelNumber = 11,
-                    centerFrequency = 2405,
-                    congestionScore = 0.0,
-                    isZllRecommended = true,
-                ),
-            onClick = {},
-        )
-        ChannelCard(
-            channel =
-                ZigbeeChannelCongestion(
-                    channelNumber = 15,
-                    centerFrequency = 2425,
-                    congestionScore = 0.0,
-                    isZllRecommended = true,
-                ),
-            onClick = {},
-        )
-        ChannelCard(
-            channel =
-                ZigbeeChannelCongestion(
-                    channelNumber = 26,
-                    centerFrequency = 2480,
-                    congestionScore = 0.0,
-                    isWarning = true,
-                ),
-            onClick = {},
-        )
-        ChannelCard(
-            channel =
-                ZigbeeChannelCongestion(
-                    channelNumber = 12,
-                    centerFrequency = 2410,
-                    congestionScore = 0.0,
-                ),
-            onClick = {},
-        )
-    }
+        Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+                ChannelCard(
+                        channel =
+                                ZigbeeChannelCongestion(
+                                        channelNumber = 11,
+                                        centerFrequency = 2405,
+                                        congestionScore = 0.0,
+                                        isZllRecommended = true,
+                                ),
+                        onClick = {},
+                )
+                ChannelCard(
+                        channel =
+                                ZigbeeChannelCongestion(
+                                        channelNumber = 15,
+                                        centerFrequency = 2425,
+                                        congestionScore = 0.0,
+                                        isZllRecommended = true,
+                                ),
+                        onClick = {},
+                )
+                ChannelCard(
+                        channel =
+                                ZigbeeChannelCongestion(
+                                        channelNumber = 26,
+                                        centerFrequency = 2480,
+                                        congestionScore = 0.0,
+                                        isWarning = true,
+                                ),
+                        onClick = {},
+                )
+                ChannelCard(
+                        channel =
+                                ZigbeeChannelCongestion(
+                                        channelNumber = 12,
+                                        centerFrequency = 2410,
+                                        congestionScore = 0.0,
+                                ),
+                        onClick = {},
+                )
+        }
 }
 
 @Suppress("MagicNumber", "FunctionNaming")
 @Preview(name = "Details Sheet (Recommended)", showBackground = true)
 @Composable
 fun ChannelDetailsRecommendedPreview() {
-    ChannelorTheme {
-        ChannelDetailsContent(
-            channel =
-                ZigbeeChannelCongestion(
-                    channelNumber = 15,
-                    centerFrequency = 2425,
-                    congestionScore = 10.0,
-                    isZllRecommended = true,
-                    pros = listOf("Zigbee Light Link (ZLL) recommended channel"),
-                    cons = emptyList(),
+        ChannelorTheme {
+                ChannelDetailsContent(
+                        channel =
+                                ZigbeeChannelCongestion(
+                                        channelNumber = 15,
+                                        centerFrequency = 2425,
+                                        congestionScore = 10.0,
+                                        isZllRecommended = true,
+                                        pros = listOf(R.string.pro_zll_recommended),
+                                        cons = emptyList(),
+                                )
                 )
-        )
-    }
+        }
 }
 
 @Suppress("MagicNumber", "FunctionNaming")
 @Preview(name = "Details Sheet (Problematic)", showBackground = true)
 @Composable
 fun ChannelDetailsProblematicPreview() {
-    ChannelorTheme {
-        ChannelDetailsContent(
-            channel =
-                ZigbeeChannelCongestion(
-                    channelNumber = 11,
-                    centerFrequency = 2405,
-                    congestionScore = 80.0,
-                    isZllRecommended = true,
-                    pros = listOf("Zigbee Light Link (ZLL) recommended channel"),
-                    cons = listOf("Usually occupied by Wi-Fi (Channel 1)"),
+        ChannelorTheme {
+                ChannelDetailsContent(
+                        channel =
+                                ZigbeeChannelCongestion(
+                                        channelNumber = 11,
+                                        centerFrequency = 2405,
+                                        congestionScore = 80.0,
+                                        isZllRecommended = true,
+                                        pros = listOf(R.string.pro_zll_recommended),
+                                        cons = listOf(R.string.con_wifi_1_interference),
+                                )
                 )
-        )
-    }
+        }
 }

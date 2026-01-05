@@ -9,47 +9,50 @@ class ZigbeeAnalyzer @Inject constructor() {
     // Zigbee channels 11-26
     // Center Freq = 2405 + 5 * (k - 11)
     private val zigbeeChannels =
-        (ZIGBEE_MIN_CHANNEL..ZIGBEE_MAX_CHANNEL).map { channel ->
-            channel to (ZIGBEE_START_FREQ + ZIGBEE_CHANNEL_SPACING * (channel - ZIGBEE_MIN_CHANNEL))
-        }
+            (ZIGBEE_MIN_CHANNEL..ZIGBEE_MAX_CHANNEL).map { channel ->
+                channel to
+                        (ZIGBEE_START_FREQ +
+                                ZIGBEE_CHANNEL_SPACING * (channel - ZIGBEE_MIN_CHANNEL))
+            }
 
     fun analyzeCongestion(wifiNetworks: List<WifiNetwork>): List<ZigbeeChannelCongestion> {
         return zigbeeChannels.map { (channel, frequency) ->
             val score = calculateCongestionForChannel(frequency, wifiNetworks)
             ZigbeeChannelCongestion(
-                channelNumber = channel,
-                centerFrequency = frequency,
-                congestionScore = score,
-                isZllRecommended = channel in ZLL_RECOMMENDED_CHANNELS,
-                isWarning = channel == ZIGBEE_MAX_CHANNEL,
-                pros = getProsForChannel(channel),
-                cons = getConsForChannel(channel),
+                    channelNumber = channel,
+                    centerFrequency = frequency,
+                    congestionScore = score,
+                    isZllRecommended = channel in ZLL_RECOMMENDED_CHANNELS,
+                    isWarning = channel == ZIGBEE_MAX_CHANNEL,
+                    pros = getProsForChannel(channel),
+                    cons = getConsForChannel(channel),
             )
         }
     }
 
     @Suppress("MagicNumber")
-    private fun getProsForChannel(channel: Int): List<String> = buildList {
-        if (channel in ZLL_RECOMMENDED_CHANNELS) add("Zigbee Light Link (ZLL) recommended channel")
-        if (channel == 26) add("Little to no Wi-Fi interference")
+    private fun getProsForChannel(channel: Int): List<Int> = buildList {
+        if (channel in ZLL_RECOMMENDED_CHANNELS)
+                add(dev.sebastiano.channelor.R.string.pro_zll_recommended)
+        if (channel == 26) add(dev.sebastiano.channelor.R.string.pro_no_wifi_interference)
     }
 
     @Suppress("MagicNumber")
-    private fun getConsForChannel(channel: Int): List<String> = buildList {
-        if (channel == 11) add("Usually occupied by Wi-Fi (Channel 1)")
+    private fun getConsForChannel(channel: Int): List<Int> = buildList {
+        if (channel == 11) add(dev.sebastiano.channelor.R.string.con_wifi_1_interference)
         if (channel == 26) {
-            add("Lower transmission power allowed by FCC/ETSI")
-            add("Often poor device support (some devices can't reach CH 26)")
+            add(dev.sebastiano.channelor.R.string.con_low_power_allowed)
+            add(dev.sebastiano.channelor.R.string.con_poor_device_support)
         }
         if (channel !in ZLL_RECOMMENDED_CHANNELS) {
-            add("Not a standard ZLL channel")
-            add("Potential compatibility issues with Hue, IKEA, etc.")
+            add(dev.sebastiano.channelor.R.string.con_not_standard_zll)
+            add(dev.sebastiano.channelor.R.string.con_compatibility_issues)
         }
     }
 
     private fun calculateCongestionForChannel(
-        zigbeeCenterFreq: Int,
-        scanResults: List<WifiNetwork>,
+            zigbeeCenterFreq: Int,
+            scanResults: List<WifiNetwork>,
     ): Double {
         var totalInterference = 0.0
 
@@ -65,8 +68,7 @@ class ZigbeeAnalyzer @Inject constructor() {
 
             // If the Zigbee channel is within the Wi-Fi channel's spread
             // Wi-Fi spreads +/- 11MHz from center.
-            if (
-                dist < wifiBandwidth / 2.0 + ZIGBEE_WIDTH_SAFETY_MHZ
+            if (dist < wifiBandwidth / 2.0 + ZIGBEE_WIDTH_SAFETY_MHZ
             ) { // +2 for Zigbee width safety
                 // Calculate interference power based on RSSI
                 // RSSI is negative dBm. -30 is strong, -90 is weak.

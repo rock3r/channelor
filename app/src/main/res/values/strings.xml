@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">Channelor</string>
+    <string name="app_subtitle">Zigbee Interference Analyzer</string>
+    <string name="recommended_channels_title">Recommended Channels</string>
+    <string name="scan_to_see_recommendations">Scan to see recommendations</string>
+    <string name="channel_number_format">CH %1$d</string>
+    <string name="frequency_format">%1$d MHz</string>
+    <string name="zll_recommended">ZLL Recommended</string>
+    <string name="channel_details_title">Channel %1$d Details</string>
+    <string name="center_frequency_format">Center frequency: %1$d MHz</string>
+    <string name="pros">Pros</string>
+    <string name="cons">Cons</string>
+    <string name="spectrum_analysis_title">Spectrum Analysis</string>
+    <string name="performing_initial_scan">Performing initial scan…</string>
+    <string name="no_scan_data_available">No scan data available.\nTap the button to scan.</string>
+    <string name="cd_scan">Scan</string>
+    <string name="scanning_wifi_networks">Scanning Wi-Fi networks…</string>
+
+    <!-- Zigbee Analyzer strings -->
+    <string name="pro_zll_recommended">Zigbee Light Link (ZLL) recommended channel</string>
+    <string name="pro_no_wifi_interference">Little to no Wi-Fi interference</string>
+    <string name="con_wifi_1_interference">Usually occupied by Wi-Fi (Channel 1)</string>
+    <string name="con_low_power_allowed">Lower transmission power allowed by FCC/ETSI</string>
+    <string name="con_poor_device_support">Often poor device support (some devices can't reach CH 26)</string>
+    <string name="con_not_standard_zll">Not a standard ZLL channel</string>
+    <string name="con_compatibility_issues">Potential compatibility issues with Hue, IKEA, etc.</string>
 </resources>
