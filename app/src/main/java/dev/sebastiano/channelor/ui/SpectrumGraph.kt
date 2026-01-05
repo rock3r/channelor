@@ -33,13 +33,13 @@ import kotlin.math.exp
 
 /** Configuration for the spectrum graph display. */
 private data class GraphConfig(
-    val minFreq: Float = 2400f,
-    val maxFreq: Float = 2483.5f,
-    val minRssi: Float = -100f,
-    val maxRssi: Float = -30f,
-    val wifiBandwidthMhz: Float = 22f, // WiFi signal spans ±11 MHz from center
-    val wifiCurveSteps: Int = 20, // Number of points to render WiFi signal curve
-    val wifiCurveSigma: Double = 4.0, // Gaussian curve width parameter
+    val minFreq: Float = MIN_FREQ,
+    val maxFreq: Float = MAX_FREQ,
+    val minRssi: Float = MIN_RSSI,
+    val maxRssi: Float = MAX_RSSI,
+    val wifiBandwidthMhz: Float = WIFI_BANDWIDTH_MHZ, // WiFi signal spans ±11 MHz from center
+    val wifiCurveSteps: Int = WIFI_CURVE_STEPS, // Number of points to render WiFi signal curve
+    val wifiCurveSigma: Double = WIFI_CURVE_SIGMA, // Gaussian curve width parameter
     val zigbeeLabelTopMargin: Dp = 5.dp,
     val labelBackgroundPadding: Dp = 4.dp,
     val wifiStrokeWidth: Dp = 1.5.dp,
@@ -49,6 +49,16 @@ private data class GraphConfig(
 ) {
     val freqRange: Float = maxFreq - minFreq
     val rssiRange: Float = maxRssi - minRssi
+
+    companion object {
+        const val MIN_FREQ = 2400f
+        const val MAX_FREQ = 2483.5f
+        const val MIN_RSSI = -100f
+        const val MAX_RSSI = -30f
+        const val WIFI_BANDWIDTH_MHZ = 22f
+        const val WIFI_CURVE_STEPS = 20
+        const val WIFI_CURVE_SIGMA = 4.0
+    }
 }
 
 /** Maps frequency and RSSI values to canvas coordinates. */
@@ -80,6 +90,7 @@ private data class GraphColors(
     val labelBackground: Color,
 )
 
+@Suppress("FunctionNaming")
 @Composable
 fun SpectrumGraph(
     wifiScanResults: List<WifiNetwork>,
@@ -110,7 +121,7 @@ fun SpectrumGraph(
             config.zigbeeLabelTopMargin.toPx() +
                 sampleTextLayout.size.height +
                 config.labelBackgroundPadding.toPx() +
-                8.dp.toPx() // Extra breathing room
+                EXTRA_TOP_PADDING.toPx()
 
         val mapper = CoordinateMapper(config, size.width, size.height, topPadding)
 
@@ -119,12 +130,15 @@ fun SpectrumGraph(
         drawWifiSignals(wifiScanResults, mapper, config, colors)
 
         drawZigbeeMarkers(
-            zigbeeCongestion,
-            top3ChannelNumbers,
-            mapper,
-            config,
-            colors,
-            textMeasurer,
+            params =
+                ZigbeeDrawParams(
+                    channels = zigbeeCongestion,
+                    top3Channels = top3ChannelNumbers,
+                    mapper = mapper,
+                    config = config,
+                    colors = colors,
+                    textMeasurer = textMeasurer,
+                )
         )
     }
 }
@@ -140,7 +154,7 @@ private fun DrawScope.drawWifiSignals(
     val twoSigmaSquared = 2 * config.wifiCurveSigma * config.wifiCurveSigma
     val halfBandwidth = config.wifiBandwidthMhz / 2f
     val stepSize = config.wifiBandwidthMhz / config.wifiCurveSteps
-    val baseY = mapper.rssiToY(-100) // Bottom of the graph
+    val baseY = mapper.rssiToY(config.minRssi.toInt()) // Bottom of the graph
 
     networks.forEach { network ->
         val centerFreq = network.frequency.toFloat()
@@ -148,14 +162,17 @@ private fun DrawScope.drawWifiSignals(
 
         val path =
             buildWifiPath(
-                centerFreq,
-                peakY,
-                baseY,
-                halfBandwidth,
-                stepSize,
-                config.wifiCurveSteps,
-                twoSigmaSquared,
-                mapper,
+                centerFreq = centerFreq,
+                peakY = peakY,
+                baseY = baseY,
+                params =
+                    WifiPathParams(
+                        halfBandwidth = halfBandwidth,
+                        stepSize = stepSize,
+                        steps = config.wifiCurveSteps,
+                        twoSigmaSquared = twoSigmaSquared,
+                    ),
+                mapper = mapper,
             )
 
         // Draw filled area first, then stroke on top
@@ -178,31 +195,36 @@ private fun DrawScope.drawWifiSignals(
     }
 }
 
+/** Parameters for building a WiFi path. */
+private data class WifiPathParams(
+    val halfBandwidth: Float,
+    val stepSize: Float,
+    val steps: Int,
+    val twoSigmaSquared: Double,
+)
+
 /** Builds a Path representing a WiFi signal using a Gaussian curve. */
 private fun buildWifiPath(
     centerFreq: Float,
     peakY: Float,
     baseY: Float,
-    halfBandwidth: Float,
-    stepSize: Float,
-    steps: Int,
-    twoSigmaSquared: Double,
+    params: WifiPathParams,
     mapper: CoordinateMapper,
 ): Path {
     val path = Path()
-    val startFreq = centerFreq - halfBandwidth
-    val endFreq = centerFreq + halfBandwidth
+    val startFreq = centerFreq - params.halfBandwidth
+    val endFreq = centerFreq + params.halfBandwidth
     val yRange = baseY - peakY
 
     path.moveTo(mapper.freqToX(startFreq), baseY)
 
-    for (i in 0..steps) {
-        val freq = startFreq + i * stepSize
+    for (i in 0..params.steps) {
+        val freq = startFreq + i * params.stepSize
         val x = mapper.freqToX(freq)
 
         // Calculate Gaussian shape factor
         val freqDiff = freq - centerFreq
-        val shapeFactor = exp(-(freqDiff * freqDiff) / twoSigmaSquared).toFloat()
+        val shapeFactor = exp(-(freqDiff * freqDiff) / params.twoSigmaSquared).toFloat()
         val y = baseY - yRange * shapeFactor
 
         path.lineTo(x, y)
@@ -214,30 +236,34 @@ private fun buildWifiPath(
     return path
 }
 
+/** Parameters for drawing Zigbee markers. */
+private data class ZigbeeDrawParams(
+    val channels: List<ZigbeeChannelCongestion>,
+    val top3Channels: Set<Int>,
+    val mapper: CoordinateMapper,
+    val config: GraphConfig,
+    val colors: GraphColors,
+    val textMeasurer: TextMeasurer,
+)
+
 /** Draws Zigbee channel markers with labels. */
-private fun DrawScope.drawZigbeeMarkers(
-    channels: List<ZigbeeChannelCongestion>,
-    top3Channels: Set<Int>,
-    mapper: CoordinateMapper,
-    config: GraphConfig,
-    colors: GraphColors,
-    textMeasurer: TextMeasurer,
-) {
+private fun DrawScope.drawZigbeeMarkers(params: ZigbeeDrawParams) {
+    val config = params.config
     val labelTopMargin = config.zigbeeLabelTopMargin.toPx()
     val backgroundPadding = config.labelBackgroundPadding.toPx()
 
-    channels.forEach { channel ->
-        val x = mapper.freqToX(channel.centerFrequency)
-        val isTop3 = channel.channelNumber in top3Channels
+    params.channels.forEach { channel ->
+        val x = params.mapper.freqToX(channel.centerFrequency)
+        val isTop3 = channel.channelNumber in params.top3Channels
 
-        val color = getZigbeeColor(isTop3, channel.isZllRecommended, colors)
+        val color = getZigbeeColor(isTop3, channel.isZllRecommended, params.colors)
         val strokeWidth =
             if (isTop3) config.zigbeeTop3StrokeWidth.toPx()
             else config.zigbeeRegularStrokeWidth.toPx()
 
         // Measure and draw channel number label
         val textLayout =
-            textMeasurer.measure(
+            params.textMeasurer.measure(
                 text = channel.channelNumber.toString(),
                 style =
                     TextStyle(
@@ -260,10 +286,13 @@ private fun DrawScope.drawZigbeeMarkers(
 
         // Draw label background for readability
         drawRoundRect(
-            color = colors.labelBackground,
+            color = params.colors.labelBackground,
             topLeft = Offset(labelX - backgroundPadding, labelTopMargin - 2f),
             size =
-                Size(textLayout.size.width + backgroundPadding * 2f, textLayout.size.height + 4f),
+                Size(
+                    textLayout.size.width + backgroundPadding * 2f,
+                    textLayout.size.height + LABEL_BG_VERTICAL_PADDING,
+                ),
             cornerRadius = CornerRadius(4.dp.toPx()),
         )
 
@@ -291,6 +320,7 @@ private fun DrawScope.drawGrid(width: Float, height: Float, color: Color, config
     )
 }
 
+@Suppress("MagicNumber", "FunctionNaming")
 @Preview(name = "Light Mode", showBackground = true)
 @Preview(
     name = "Dark Mode",
@@ -329,3 +359,6 @@ fun SpectrumGraphPreview() {
         }
     }
 }
+
+private val EXTRA_TOP_PADDING = 8.dp
+private const val LABEL_BG_VERTICAL_PADDING = 4f

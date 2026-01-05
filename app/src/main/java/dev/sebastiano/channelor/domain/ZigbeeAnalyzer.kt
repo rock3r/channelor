@@ -8,7 +8,10 @@ class ZigbeeAnalyzer @Inject constructor() {
 
     // Zigbee channels 11-26
     // Center Freq = 2405 + 5 * (k - 11)
-    private val zigbeeChannels = (11..26).map { channel -> channel to (2405 + 5 * (channel - 11)) }
+    private val zigbeeChannels =
+        (ZIGBEE_MIN_CHANNEL..ZIGBEE_MAX_CHANNEL).map { channel ->
+            channel to (ZIGBEE_START_FREQ + ZIGBEE_CHANNEL_SPACING * (channel - ZIGBEE_MIN_CHANNEL))
+        }
 
     fun analyzeCongestion(wifiNetworks: List<WifiNetwork>): List<ZigbeeChannelCongestion> {
         return zigbeeChannels.map { (channel, frequency) ->
@@ -17,13 +20,14 @@ class ZigbeeAnalyzer @Inject constructor() {
                 channelNumber = channel,
                 centerFrequency = frequency,
                 congestionScore = score,
-                isZllRecommended = channel in listOf(11, 15, 20, 25),
+                isZllRecommended = channel in ZLL_RECOMMENDED_CHANNELS,
                 annotation = getAnnotationForChannel(channel),
-                isWarning = channel == 26,
+                isWarning = channel == ZIGBEE_MAX_CHANNEL,
             )
         }
     }
 
+    @Suppress("MagicNumber")
     private fun getAnnotationForChannel(channel: Int): String? =
         when (channel) {
             11 -> "Usually crowded by Wi-Fi"
@@ -45,20 +49,22 @@ class ZigbeeAnalyzer @Inject constructor() {
             // Approximate bandwidth, usually 20MHz for 2.4GHz
             // ScanResult has channelWidth but it requires API 23+, let's assume 20MHz (approx 22MHz
             // spectral mask)
-            val wifiBandwidth = 22 // MHz
+            val wifiBandwidth = WIFI_BANDWIDTH_MHZ // MHz
 
             // Distance between centers
             val dist = abs(wifiCenterFreq - zigbeeCenterFreq)
 
             // If the Zigbee channel is within the Wi-Fi channel's spread
             // Wi-Fi spreads +/- 11MHz from center.
-            if (dist < wifiBandwidth / 2.0 + 2.0) { // +2 for Zigbee width safety
+            if (
+                dist < wifiBandwidth / 2.0 + ZIGBEE_WIDTH_SAFETY_MHZ
+            ) { // +2 for Zigbee width safety
                 // Calculate interference power based on RSSI
                 // RSSI is negative dBm. -30 is strong, -90 is weak.
                 // Convert to approx linear power or just shift it to positive range for scoring
                 // Let's use 10^(RSSI/10) which is proportional to mW
 
-                val power = 10.0.pow(wifi.rssi / 10.0)
+                val power = POWER_BASE.pow(wifi.rssi / POWER_DIVISOR)
 
                 // Weight by distance (closer to center = more interference)
                 // Simple linear falloff? or just full power if overlapping.
@@ -72,5 +78,18 @@ class ZigbeeAnalyzer @Inject constructor() {
         // Normalize or log scale the result for display?
         // Raw power sum is fine for comparison.
         return totalInterference
+    }
+
+    companion object {
+        private const val ZIGBEE_MIN_CHANNEL = 11
+        private const val ZIGBEE_MAX_CHANNEL = 26
+        private const val ZIGBEE_START_FREQ = 2405
+        private const val ZIGBEE_CHANNEL_SPACING = 5
+        private val ZLL_RECOMMENDED_CHANNELS = listOf(11, 15, 20, 25)
+
+        private const val WIFI_BANDWIDTH_MHZ = 22
+        private const val ZIGBEE_WIDTH_SAFETY_MHZ = 2.0
+        private const val POWER_BASE = 10.0
+        private const val POWER_DIVISOR = 10.0
     }
 }

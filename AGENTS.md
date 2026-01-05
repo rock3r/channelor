@@ -53,3 +53,6 @@ Channelor is an Android application designed to analyze Wi-Fi interference in th
 - **`app/build.gradle.kts`**: Defines the Android application configuration and dependencies (Hilt, Compose, etc.).
 - **`settings.gradle.kts`**: Project-level settings.
 - **`gradle/libs.versions.toml`**: Centralized version management for dependencies.
+
+### Formatting
+Use the `ktfmt` formatter to format the code. It is configured in the root `build.gradle.kts` file. You must run the `ktfmtFormat` task to format the code after every change.

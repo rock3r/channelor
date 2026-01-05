@@ -35,7 +35,7 @@ constructor(
             .getWifiScanResults()
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
+                started = SharingStarted.WhileSubscribed(STATE_FLOW_STOP_TIMEOUT_MS),
                 initialValue = emptyList(),
             )
 
@@ -50,7 +50,7 @@ constructor(
             }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
+                started = SharingStarted.WhileSubscribed(STATE_FLOW_STOP_TIMEOUT_MS),
                 initialValue = emptyList(),
             )
 
@@ -78,7 +78,7 @@ constructor(
             }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
+                started = SharingStarted.WhileSubscribed(STATE_FLOW_STOP_TIMEOUT_MS),
                 initialValue = emptyList(),
             )
 
@@ -87,7 +87,7 @@ constructor(
             .map { it.map { channel -> channel.channelNumber }.toSet() }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
+                started = SharingStarted.WhileSubscribed(STATE_FLOW_STOP_TIMEOUT_MS),
                 initialValue = emptySet(),
             )
 
@@ -107,8 +107,13 @@ constructor(
             // triggerScan returns immediate boolean if scan started.
             // We can toggle isScanning off after some time or when results update?
             // For now let's just set it to false after a short delay to simulate "triggering"
-            kotlinx.coroutines.delay(1000)
+            kotlinx.coroutines.delay(SCAN_DELAY_MS)
             _isScanning.value = false
         }
+    }
+
+    companion object {
+        private const val STATE_FLOW_STOP_TIMEOUT_MS = 5000L
+        private const val SCAN_DELAY_MS = 1000L
     }
 }

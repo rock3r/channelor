@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package dev.sebastiano.channelor.ui.theme
 
 import androidx.compose.ui.graphics.Color

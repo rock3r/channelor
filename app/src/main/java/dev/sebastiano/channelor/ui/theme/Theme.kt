@@ -58,6 +58,7 @@ private val LightColorScheme =
         onSurfaceVariant = OnSurfaceVariantLight,
     )
 
+@Suppress("FunctionNaming")
 @Composable
 fun ChannelorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

@@ -69,7 +69,11 @@ constructor(
                                     // For now, let's just log or ignore.
                                 }
                             } catch (e: SecurityException) {
-                                // Handle exception
+                                Log.e(
+                                    "WifiRepository",
+                                    "Security exception when getting scan results",
+                                    e,
+                                )
                             }
                         }
                     }
@@ -110,6 +114,11 @@ constructor(
     }
 
     private fun is24GHz(frequency: Int): Boolean {
-        return frequency in 2400..2484
+        return frequency in MIN_FREQ_24GHZ..MAX_FREQ_24GHZ
+    }
+
+    companion object {
+        private const val MIN_FREQ_24GHZ = 2400
+        private const val MAX_FREQ_24GHZ = 2484
     }
 }
