@@ -41,7 +41,6 @@ private data class GraphConfig(
         val wifiCurveSteps: Int = 20, // Number of points to render WiFi signal curve
         val wifiCurveSigma: Double = 4.0, // Gaussian curve width parameter
         val zigbeeLabelTopMargin: Dp = 5.dp,
-        val zigbeeLabelPadding: Dp = 4.dp,
         val labelBackgroundPadding: Dp = 4.dp,
         val wifiStrokeWidth: Dp = 1.5.dp,
         val zigbeeRegularStrokeWidth: Dp = 1.dp,
@@ -57,6 +56,7 @@ private class CoordinateMapper(
         private val config: GraphConfig,
         private val canvasWidth: Float,
         private val canvasHeight: Float,
+        private val topPadding: Float = 0f,
 ) {
   fun freqToX(freq: Float): Float = ((freq - config.minFreq) / config.freqRange) * canvasWidth
 
@@ -64,7 +64,8 @@ private class CoordinateMapper(
 
   fun rssiToY(rssi: Int): Float {
     val clampedRssi = rssi.coerceIn(config.minRssi.toInt(), config.maxRssi.toInt())
-    return canvasHeight - ((clampedRssi - config.minRssi) / config.rssiRange) * canvasHeight
+    val availableHeight = canvasHeight - topPadding
+    return canvasHeight - ((clampedRssi - config.minRssi) / config.rssiRange) * availableHeight
   }
 }
 
@@ -101,7 +102,17 @@ fun SpectrumGraph(
           )
 
   Canvas(modifier = modifier) {
-    val mapper = CoordinateMapper(config, size.width, size.height)
+    // Calculate top padding once to ensure WiFi signals don't overlap with labels
+    // We use a representative label to measure the height
+    val sampleTextLayout =
+            textMeasurer.measure(text = "88", style = TextStyle(fontWeight = FontWeight.Bold))
+    val topPadding =
+            config.zigbeeLabelTopMargin.toPx() +
+                    sampleTextLayout.size.height +
+                    config.labelBackgroundPadding.toPx() +
+                    8.dp.toPx() // Extra breathing room
+
+    val mapper = CoordinateMapper(config, size.width, size.height, topPadding)
 
     drawGrid(size.width, size.height, colors.axis, config)
 
