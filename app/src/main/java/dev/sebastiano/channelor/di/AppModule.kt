@@ -13,15 +13,17 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    @Provides
-    @Singleton
-    fun provideWifiManager(@ApplicationContext context: Context): WifiManager {
-        return context.getSystemService(Context.WIFI_SERVICE) as WifiManager
-    }
+  @Provides
+  @Singleton
+  fun provideWifiManager(@ApplicationContext context: Context): WifiManager {
+    return context.getSystemService(Context.WIFI_SERVICE) as WifiManager
+  }
 
-    @Provides
-    @Singleton
-    fun provideWifiRepository(wifiRepositoryImpl: dev.sebastiano.channelor.data.WifiRepositoryImpl): dev.sebastiano.channelor.data.WifiRepository {
-        return wifiRepositoryImpl
-    }
+  @Provides
+  @Singleton
+  fun provideWifiRepository(
+    wifiRepositoryImpl: dev.sebastiano.channelor.data.WifiRepositoryImpl
+  ): dev.sebastiano.channelor.data.WifiRepository {
+    return wifiRepositoryImpl
+  }
 }

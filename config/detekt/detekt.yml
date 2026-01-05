@@ -1,0 +1,17 @@
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  active: true
+  # Using default values for now to avoid misspelled properties if names changed
+  # CyclomaticComplexity:
+  #   active: true
+  #   threshold: 15
+
+Compose:
+  active: true

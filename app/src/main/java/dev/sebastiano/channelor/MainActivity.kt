@@ -10,13 +10,9 @@ import dev.sebastiano.channelor.ui.theme.ChannelorTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            ChannelorTheme {
-                DashboardScreen()
-            }
-        }
-    }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
+    setContent { ChannelorTheme { DashboardScreen() } }
+  }
 }

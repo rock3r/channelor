@@ -28,10 +28,10 @@ import kotlin.math.exp
 
 @Composable
 fun SpectrumGraph(
-        wifiScanResults: List<WifiNetwork>,
-        zigbeeCongestion: List<ZigbeeChannelCongestion>,
-        top3ChannelNumbers: Set<Int>,
-        modifier: Modifier = Modifier,
+  wifiScanResults: List<WifiNetwork>,
+  zigbeeCongestion: List<ZigbeeChannelCongestion>,
+  top3ChannelNumbers: Set<Int>,
+  modifier: Modifier = Modifier,
 ) {
   val textMeasurer = rememberTextMeasurer()
   val axisColor = MaterialTheme.colorScheme.outline
@@ -111,10 +111,7 @@ fun SpectrumGraph(
       path.close()
 
       // Single fill with reduced gradient complexity
-      drawPath(
-              path = path,
-              color = wifiFillColor,
-      )
+      drawPath(path = path, color = wifiFillColor)
 
       // Stroke outline
       drawPath(path = path, color = wifiStrokeColor, style = Stroke(width = 1.5.dp.toPx()))
@@ -126,24 +123,23 @@ fun SpectrumGraph(
       val isTop3 = zigbee.channelNumber in top3ChannelNumbers
 
       val color =
-              when {
-                isTop3 -> zigbeeTop3Color
-                zigbee.isZllRecommended -> zigbeeRecommendedColor
-                else -> zigbeeRegularColor.copy(alpha = 0.5f)
-              }
+        when {
+          isTop3 -> zigbeeTop3Color
+          zigbee.isZllRecommended -> zigbeeRecommendedColor
+          else -> zigbeeRegularColor.copy(alpha = 0.5f)
+        }
 
       // Channel Number
       val textLayout =
-              textMeasurer.measure(
-                      text = "${zigbee.channelNumber}",
-                      style =
-                              TextStyle(
-                                      color = color,
-                                      fontSize = TextUnit.Unspecified,
-                                      fontWeight =
-                                              if (isTop3) FontWeight.Bold else FontWeight.Normal,
-                              ),
-              )
+        textMeasurer.measure(
+          text = "${zigbee.channelNumber}",
+          style =
+            TextStyle(
+              color = color,
+              fontSize = TextUnit.Unspecified,
+              fontWeight = if (isTop3) FontWeight.Bold else FontWeight.Normal,
+            ),
+        )
 
       val labelX = x - textLayout.size.width / 2
       val labelY = 5f
@@ -152,21 +148,17 @@ fun SpectrumGraph(
 
       // Vertical Line
       drawLine(
-              color = color,
-              start = Offset(x, labelY + textLayout.size.height + 4f),
-              end = Offset(x, height),
-              strokeWidth = strokeWidth,
+        color = color,
+        start = Offset(x, labelY + textLayout.size.height + 4f),
+        end = Offset(x, height),
+        strokeWidth = strokeWidth,
       )
 
       // Background for legibility
       drawRect(
-              color = labelBackgroundColor,
-              topLeft = Offset(labelX - 4f, labelY - 2f),
-              size =
-                      Size(
-                              textLayout.size.width.toFloat() + 8f,
-                              textLayout.size.height.toFloat() + 4f,
-                      ),
+        color = labelBackgroundColor,
+        topLeft = Offset(labelX - 4f, labelY - 2f),
+        size = Size(textLayout.size.width.toFloat() + 8f, textLayout.size.height.toFloat() + 4f),
       )
 
       drawText(textLayoutResult = textLayout, topLeft = Offset(labelX, labelY))
@@ -186,29 +178,29 @@ private fun DrawScope.drawGrid(width: Float, height: Float, color: Color) {
 @Composable
 fun SpectrumGraphPreview() {
   val mockWifi =
-          listOf(
-                  WifiNetwork("Net 1", 2412, -40),
-                  WifiNetwork("Net 2", 2437, -65),
-                  WifiNetwork("Net 3", 2462, -50),
-          )
+    listOf(
+      WifiNetwork("Net 1", 2412, -40),
+      WifiNetwork("Net 2", 2437, -65),
+      WifiNetwork("Net 3", 2462, -50),
+    )
 
   val mockZigbee =
-          (11..26).map {
-            ZigbeeChannelCongestion(
-                    it,
-                    2405 + 5 * (it - 11),
-                    if (it in listOf(15, 20, 25)) 0.0 else 100.0,
-            )
-          }
+    (11..26).map {
+      ZigbeeChannelCongestion(
+        it,
+        2405 + 5 * (it - 11),
+        if (it in listOf(15, 20, 25)) 0.0 else 100.0,
+      )
+    }
 
   dev.sebastiano.channelor.ui.theme.ChannelorTheme {
     Surface {
       Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         SpectrumGraph(
-                wifiScanResults = mockWifi,
-                zigbeeCongestion = mockZigbee,
-                top3ChannelNumbers = setOf(15, 20, 25),
-                modifier = Modifier.fillMaxSize(),
+          wifiScanResults = mockWifi,
+          zigbeeCongestion = mockZigbee,
+          top3ChannelNumbers = setOf(15, 20, 25),
+          modifier = Modifier.fillMaxSize(),
         )
       }
     }
