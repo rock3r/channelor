@@ -23,7 +23,9 @@ import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -72,7 +74,7 @@ fun DashboardScreen(viewModel: MainViewModel = hiltViewModel()) {
                 else MaterialTheme.colorScheme.primaryContainer,
         ) {
           if (isScanning) {
-            androidx.compose.material3.CircularProgressIndicator(
+            CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
                 strokeWidth = 2.dp,
                 color = MaterialTheme.colorScheme.primary,
@@ -124,7 +126,7 @@ fun DashboardScreen(viewModel: MainViewModel = hiltViewModel()) {
                   horizontalAlignment = Alignment.CenterHorizontally,
               ) {
                 if (isScanning) {
-                  androidx.compose.material3.CircularProgressIndicator(
+                  CircularProgressIndicator(
                       modifier = Modifier.size(48.dp),
                       color = MaterialTheme.colorScheme.primary,
                   )
@@ -154,7 +156,7 @@ fun DashboardScreen(viewModel: MainViewModel = hiltViewModel()) {
       }
 
       if (isScanning) {
-        androidx.compose.material3.LinearProgressIndicator(
+        LinearProgressIndicator(
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.primary,
         )

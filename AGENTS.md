@@ -24,11 +24,19 @@ Channelor is an Android application designed to analyze Wi-Fi interference in th
     - `WifiRepositoryImpl`: Uses `WifiManager` and a `callbackFlow` to stream `ScanResult` data, filtered for the 2.4GHz band (`is24GHz` function).
 
 ### Domain Layer
-- **`app/src/main/java/dev/sebastiano/channelor/domain/ZigbeeAnalyzer.kt`**:
-    - `ZigbeeAnalyzer`: Contains the core logic for calculating interference.
-    - `analyzeCongestion(wifiScanResults)`: Maps Wi-Fi data to Zigbee channel congestion.
-    - `calculateCongestionForChannel(zigbeeCenterFreq, scanResults)`: Computes interference power using a spectral mask approximation ($10^{RSSI/10}$).
+- **`app/src/main/java/dev/sebastiano/channelor/domain/Models.kt`**:
+    - `WifiNetwork`: Plain data model for a Wi-Fi network (SSID, Frequency, RSSI).
     - `ZigbeeChannelCongestion`: Data model for channel number, center frequency, and congestion score.
+- **`app/src/main/java/dev/sebastiano/channelor/domain/ZigbeeAnalyzer.kt`**:
+    - `ZigbeeAnalyzer`: Contains the core logic for calculating interference, now platform-agnostic.
+    - `analyzeCongestion(wifiNetworks)`: Maps `WifiNetwork` list to Zigbee channel congestion.
+    - `calculateCongestionForChannel(...)`: Computes interference power using a spectral mask approximation.
+
+### Testing
+- **JVM Unit Tests**:
+    - `app/src/test/java/dev/sebastiano/channelor/domain/ZigbeeAnalyzerTest.kt`: Tests the core interference calculation logic.
+- **Compose UI Tests**:
+    - `app/src/androidTest/java/dev/sebastiano/channelor/ui/ChannelCardTest.kt`: Tests individual UI components.
 
 ### Presentation Layer
 - **`app/src/main/java/dev/sebastiano/channelor/ui/MainViewModel.kt`**:
