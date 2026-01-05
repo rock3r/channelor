@@ -1,6 +1,11 @@
 package dev.sebastiano.channelor.ui
 
 import android.Manifest
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -89,20 +95,64 @@ fun DashboardContent(
 ) {
         Scaffold(
                 floatingActionButton = {
-                        FloatingActionButton(
-                                onClick = onScanClick,
-                                containerColor =
-                                        if (isScanning) MaterialTheme.colorScheme.surfaceVariant
-                                        else MaterialTheme.colorScheme.primaryContainer,
-                        ) {
-                                if (isScanning) {
-                                        CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp),
-                                                strokeWidth = 2.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                        )
-                                } else {
-                                        Icon(Icons.Rounded.Refresh, contentDescription = "Scan")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                val density = LocalDensity.current
+                                AnimatedVisibility(
+                                        visible = isScanning,
+                                        enter =
+                                                fadeIn() +
+                                                        slideInHorizontally {
+                                                                with(density) { 20.dp.roundToPx() }
+                                                        },
+                                        exit =
+                                                fadeOut() +
+                                                        slideOutHorizontally {
+                                                                with(density) { 20.dp.roundToPx() }
+                                                        }
+                                ) {
+                                        Card(
+                                                modifier = Modifier.padding(end = 16.dp),
+                                                colors =
+                                                        CardDefaults.cardColors(
+                                                                containerColor =
+                                                                        MaterialTheme.colorScheme
+                                                                                .secondaryContainer
+                                                        ),
+                                                elevation =
+                                                        CardDefaults.cardElevation(
+                                                                defaultElevation = 4.dp
+                                                        ),
+                                        ) {
+                                                Text(
+                                                        text = "Scanning Wi-Fi networks...",
+                                                        modifier =
+                                                                Modifier.padding(
+                                                                        horizontal = 16.dp,
+                                                                        vertical = 8.dp
+                                                                ),
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        color =
+                                                                MaterialTheme.colorScheme
+                                                                        .onSecondaryContainer,
+                                                )
+                                        }
+                                }
+                                FloatingActionButton(
+                                        onClick = onScanClick,
+                                        containerColor =
+                                                if (isScanning)
+                                                        MaterialTheme.colorScheme.surfaceVariant
+                                                else MaterialTheme.colorScheme.primaryContainer,
+                                ) {
+                                        if (isScanning) {
+                                                CircularProgressIndicator(
+                                                        modifier = Modifier.size(24.dp),
+                                                        strokeWidth = 2.dp,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                )
+                                        } else {
+                                                Icon(Icons.Rounded.Refresh, contentDescription = "Scan")
+                                        }
                                 }
                         }
                 }
@@ -209,35 +259,6 @@ fun DashboardContent(
                                         modifier = Modifier.fillMaxWidth(),
                                         color = MaterialTheme.colorScheme.primary,
                                 )
-                        }
-
-                        if (isScanning) {
-                                Card(
-                                        modifier =
-                                                Modifier.align(Alignment.BottomCenter)
-                                                        .padding(bottom = 80.dp),
-                                        colors =
-                                                CardDefaults.cardColors(
-                                                        containerColor =
-                                                                MaterialTheme.colorScheme
-                                                                        .secondaryContainer
-                                                ),
-                                        elevation =
-                                                CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                ) {
-                                        Text(
-                                                text = "Scanning Wi-Fi networks...",
-                                                modifier =
-                                                        Modifier.padding(
-                                                                horizontal = 16.dp,
-                                                                vertical = 8.dp
-                                                        ),
-                                                style = MaterialTheme.typography.labelMedium,
-                                                color =
-                                                        MaterialTheme.colorScheme
-                                                                .onSecondaryContainer,
-                                        )
-                                }
                         }
                 }
         }
