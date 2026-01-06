@@ -12,4 +12,6 @@ data class ZigbeeChannelCongestion(
         val isWarning: Boolean = false,
         @StringRes val pros: List<Int> = emptyList(),
         @StringRes val cons: List<Int> = emptyList(),
+        val interferingNetworks: List<WifiNetwork> = emptyList(),
+        val congestionDbm: Int? = null,
 )

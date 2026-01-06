@@ -17,7 +17,9 @@ class ZigbeeAnalyzer @Inject constructor() {
 
     fun analyzeCongestion(wifiNetworks: List<WifiNetwork>): List<ZigbeeChannelCongestion> {
         return zigbeeChannels.map { (channel, frequency) ->
-            val score = calculateCongestionForChannel(frequency, wifiNetworks)
+            val (score, interfering) = calculateCongestionForChannel(frequency, wifiNetworks)
+            val dbm = if (score > 0) kotlin.math.log10(score).times(POWER_DIVISOR).toInt() else null
+
             ZigbeeChannelCongestion(
                     channelNumber = channel,
                     centerFrequency = frequency,
@@ -26,6 +28,8 @@ class ZigbeeAnalyzer @Inject constructor() {
                     isWarning = channel == ZIGBEE_MAX_CHANNEL,
                     pros = getProsForChannel(channel),
                     cons = getConsForChannel(channel),
+                    interferingNetworks = interfering,
+                    congestionDbm = dbm,
             )
         }
     }
@@ -53,8 +57,9 @@ class ZigbeeAnalyzer @Inject constructor() {
     private fun calculateCongestionForChannel(
             zigbeeCenterFreq: Int,
             scanResults: List<WifiNetwork>,
-    ): Double {
+    ): Pair<Double, List<WifiNetwork>> {
         var totalInterference = 0.0
+        val interferingNetworks = mutableListOf<WifiNetwork>()
 
         for (wifi in scanResults) {
             val wifiCenterFreq = wifi.frequency
@@ -68,8 +73,7 @@ class ZigbeeAnalyzer @Inject constructor() {
 
             // If the Zigbee channel is within the Wi-Fi channel's spread
             // Wi-Fi spreads +/- 11MHz from center.
-            if (dist < wifiBandwidth / 2.0 + ZIGBEE_WIDTH_SAFETY_MHZ
-            ) { // +2 for Zigbee width safety
+            if (dist < wifiBandwidth / 2.0 + ZIGBEE_WIDTH_SAFETY_MHZ) {
                 // Calculate interference power based on RSSI
                 // RSSI is negative dBm. -30 is strong, -90 is weak.
                 // Convert to approx linear power or just shift it to positive range for scoring
@@ -83,12 +87,13 @@ class ZigbeeAnalyzer @Inject constructor() {
                 // Let's keep it simple: 1.0
 
                 totalInterference += power
+                interferingNetworks.add(wifi)
             }
         }
 
         // Normalize or log scale the result for display?
         // Raw power sum is fine for comparison.
-        return totalInterference
+        return totalInterference to interferingNetworks
     }
 
     companion object {
