@@ -51,19 +51,19 @@ class ZigbeeAnalyzerTest {
         val results = analyzer.analyzeCongestion(emptyList())
 
         val ch11 = results.find { it.channelNumber == 11 }!!
-        assertTrue(ch11.cons.contains("Usually occupied by Wi-Fi (Channel 1)"))
-        assertTrue(ch11.pros.contains("Zigbee Light Link (ZLL) recommended channel"))
+        assertTrue(ch11.cons.contains(dev.sebastiano.channelor.R.string.con_wifi_1_interference))
+        assertTrue(ch11.pros.contains(dev.sebastiano.channelor.R.string.pro_zll_recommended))
 
         val ch26 = results.find { it.channelNumber == 26 }!!
-        assertTrue(ch26.pros.contains("Little to no Wi-Fi interference"))
-        assertTrue(ch26.cons.any { it.contains("Lower transmission power") })
+        assertTrue(ch26.pros.contains(dev.sebastiano.channelor.R.string.pro_no_wifi_interference))
+        assertTrue(ch26.cons.contains(dev.sebastiano.channelor.R.string.con_low_power_allowed))
 
         val ch15 = results.find { it.channelNumber == 15 }!!
-        assertTrue(ch15.pros.contains("Zigbee Light Link (ZLL) recommended channel"))
+        assertTrue(ch15.pros.contains(dev.sebastiano.channelor.R.string.pro_zll_recommended))
         assertTrue(ch15.cons.isEmpty())
 
         val ch12 = results.find { it.channelNumber == 12 }!!
         assertTrue(ch12.pros.isEmpty())
-        assertTrue(ch12.cons.contains("Not a standard ZLL channel"))
+        assertTrue(ch12.cons.contains(dev.sebastiano.channelor.R.string.con_not_standard_zll))
     }
 }
