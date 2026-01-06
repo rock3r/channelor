@@ -21,7 +21,7 @@
     <string name="pro_no_wifi_interference">Little to no Wi-Fi interference</string>
     <string name="con_wifi_1_interference">Usually occupied by Wi-Fi (Channel 1)</string>
     <string name="con_low_power_allowed">Lower transmission power allowed by FCC/ETSI</string>
-    <string name="con_poor_device_support">Often poor device support (some devices can't reach CH 26)</string>
+    <string name="con_poor_device_support">Often poor device support (some devices can\'t reach CH 26)</string>
     <string name="con_not_standard_zll">Not a standard ZLL channel</string>
     <string name="con_compatibility_issues">Potential compatibility issues with Hue, IKEA, etc.</string>
 </resources>
