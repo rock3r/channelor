@@ -40,7 +40,11 @@ data class DashboardState(
 
 @Suppress("FunctionNaming")
 @Composable
-fun SpectrumAnalysisSection(state: DashboardState, modifier: Modifier = Modifier) {
+fun SpectrumAnalysisSection(
+        state: DashboardState,
+        selectedChannel: ZigbeeChannelCongestion?,
+        modifier: Modifier = Modifier
+) {
     Column(modifier = modifier) {
         Text(
                 text = stringResource(R.string.spectrum_analysis_title),
@@ -64,6 +68,7 @@ fun SpectrumAnalysisSection(state: DashboardState, modifier: Modifier = Modifier
                             wifiScanResults = state.wifiScanResults,
                             zigbeeCongestion = state.zigbeeCongestion,
                             top3ChannelNumbers = state.top3Channels,
+                            selectedChannel = selectedChannel,
                             modifier = Modifier.fillMaxSize(),
                     )
                 }

@@ -200,6 +200,7 @@ fun DashboardContent(
 
                                                 SpectrumAnalysisSection(
                                                         state = state,
+                                                        selectedChannel = selectedChannel,
                                                         modifier = Modifier.weight(1f)
                                                 )
                                         }
@@ -213,6 +214,7 @@ fun DashboardContent(
 
                                         SpectrumAnalysisSection(
                                                 state = state,
+                                                selectedChannel = selectedChannel,
                                                 modifier = Modifier.weight(1f)
                                         )
                                 }
