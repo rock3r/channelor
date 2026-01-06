@@ -3,8 +3,6 @@ package dev.sebastiano.channelor.ui
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,8 +11,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.sebastiano.channelor.R
 import dev.sebastiano.channelor.domain.ZigbeeChannelCongestion
@@ -27,7 +23,7 @@ class DashboardUiTest {
         @get:Rule val composeTestRule = createComposeRule()
 
         @Test
-        @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
+        @OptIn(ExperimentalMaterial3Api::class)
         fun clickingChannelCard_opensBottomSheetWithDetails() {
                 val context = InstrumentationRegistry.getInstrumentation().targetContext
                 val proString = context.getString(R.string.pro_zll_recommended)
@@ -53,9 +49,6 @@ class DashboardUiTest {
                         )
 
                 composeTestRule.setContent {
-                        val windowSizeClass =
-                                WindowSizeClass.calculateFromSize(DpSize(400.dp, 800.dp))
-
                         val sheetState = rememberModalBottomSheetState()
                         val scrollState = rememberScrollState()
                         // We need to hoist the state to test the interaction
@@ -72,7 +65,6 @@ class DashboardUiTest {
                                         onChannelDismiss = { selectedChannel = null },
                                         sheetState = sheetState,
                                         scrollState = scrollState,
-                                        windowSizeClass = windowSizeClass
                                 )
                         }
                 }

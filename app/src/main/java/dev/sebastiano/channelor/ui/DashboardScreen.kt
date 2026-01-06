@@ -73,7 +73,7 @@ import dev.sebastiano.channelor.ui.theme.ChannelorTheme
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(windowSizeClass: WindowSizeClass, viewModel: MainViewModel = hiltViewModel()) {
+fun DashboardScreen(viewModel: MainViewModel = hiltViewModel()) {
         val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
         val isScanning by viewModel.isScanning.collectAsState()
         val zigbeeCongestion by viewModel.zigbeeCongestion.collectAsState()
@@ -114,7 +114,6 @@ fun DashboardScreen(windowSizeClass: WindowSizeClass, viewModel: MainViewModel =
                 onChannelDismiss = { selectedChannel = null },
                 sheetState = sheetState,
                 scrollState = scrollState,
-                windowSizeClass = windowSizeClass,
         )
 }
 
@@ -129,7 +128,6 @@ fun DashboardContent(
         onChannelDismiss: () -> Unit,
         sheetState: SheetState,
         scrollState: ScrollState,
-        windowSizeClass: WindowSizeClass,
 ) {
 
         Scaffold(
@@ -157,7 +155,10 @@ fun DashboardContent(
                 }
         ) { innerPadding ->
                 BoxWithConstraints(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-                        val isWide = maxWidth > 600.dp
+                        // usage of local boolean to keep the condition clear
+                        // 840dp is the starting point for Expanded width window size class (Tablet
+                        // Landscape)
+                        val isWide = maxWidth > 840.dp
                         Column(
                                 modifier =
                                         Modifier.fillMaxSize()
@@ -254,7 +255,7 @@ fun DashboardEmptyPreview() {
                         onChannelDismiss = {},
                         sheetState = rememberModalBottomSheetState(),
                         scrollState = rememberScrollState(),
-                        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(400.dp, 800.dp)),
+
                 )
         }
 }
@@ -280,7 +281,6 @@ fun DashboardInitialScanningPreview() {
                         onChannelDismiss = {},
                         sheetState = rememberModalBottomSheetState(),
                         scrollState = rememberScrollState(),
-                        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(400.dp, 800.dp)),
                 )
         }
 }
@@ -330,7 +330,6 @@ fun DashboardResultsPreview() {
                         onChannelDismiss = {},
                         sheetState = rememberModalBottomSheetState(),
                         scrollState = rememberScrollState(),
-                        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(400.dp, 800.dp)),
                 )
         }
 }
@@ -375,7 +374,6 @@ fun DashboardScanningWithResultsPreview() {
                         onChannelDismiss = {},
                         sheetState = rememberModalBottomSheetState(),
                         scrollState = rememberScrollState(),
-                        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(400.dp, 800.dp)),
                 )
         }
 }
@@ -424,7 +422,6 @@ fun DashboardPhoneLandscapePreview() {
                         onChannelDismiss = {},
                         sheetState = rememberModalBottomSheetState(),
                         scrollState = rememberScrollState(),
-                        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(800.dp, 400.dp))
                 )
         }
 }
@@ -469,7 +466,6 @@ fun DashboardTabletPreview() {
                         onChannelDismiss = {},
                         sheetState = rememberModalBottomSheetState(),
                         scrollState = rememberScrollState(),
-                        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(1280.dp, 800.dp))
                 )
         }
 }
