@@ -61,7 +61,10 @@ data class DashboardActions(
 @Composable
 fun HeaderSection() {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.size(40.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier.size(40.dp).clip(CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
             Icon(
                 painterResource(R.drawable.ic_zigbee),
                 contentDescription = null,
@@ -123,7 +126,11 @@ fun RecommendationSection(
 }
 
 @Composable
-fun ChannelCard(channel: ZigbeeChannelCongestion, isSelected: Boolean = false, onClick: () -> Unit) {
+fun ChannelCard(
+    channel: ZigbeeChannelCongestion,
+    isSelected: Boolean = false,
+    onClick: () -> Unit,
+) {
     val containerColor = getChannelCardContainerColor(channel, isSelected)
     val onContainerColor = getChannelCardOnContainerColor(channel)
 
@@ -146,7 +153,10 @@ fun ChannelCard(channel: ZigbeeChannelCongestion, isSelected: Boolean = false, o
 }
 
 @Composable
-private fun getChannelCardContainerColor(channel: ZigbeeChannelCongestion, isSelected: Boolean): Color {
+private fun getChannelCardContainerColor(
+    channel: ZigbeeChannelCongestion,
+    isSelected: Boolean,
+): Color {
     val baseContainerColor =
         when {
             channel.isZllRecommended -> MaterialTheme.colorScheme.primaryContainer
@@ -276,7 +286,12 @@ fun ChannelCardPreview() {
             onClick = {},
         )
         ChannelCard(
-            channel = ZigbeeChannelCongestion(channelNumber = 12, centerFrequency = 2410, congestionScore = 0.0),
+            channel =
+                ZigbeeChannelCongestion(
+                    channelNumber = 12,
+                    centerFrequency = 2410,
+                    congestionScore = 0.0,
+                ),
             onClick = {},
         )
     }
