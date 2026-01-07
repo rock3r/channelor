@@ -57,10 +57,10 @@ constructor(
             )
 
     // Pre-compute recommended channels following a specific logic:
-    // 1. The 3rd channel is always the "least bad" (lowest congestion) among ZLL recommended
+    // 1. One channel is always the "least bad" (lowest congestion) among ZLL recommended
     // channels.
-    // 2. The 1st and 2nd channels are the best two overall channels excluding the one chosen for
-    // 3rd.
+    // 2. The other 4 channels are the best overall channels excluding the one chosen for
+    // the ZLL one.
     val recommendedChannels: StateFlow<List<ZigbeeChannelCongestion>> =
         zigbeeCongestion
             .combine(_permissionGranted) { congestion, granted ->
@@ -73,7 +73,7 @@ constructor(
                             .filter { it.channelNumber != bestZll.channelNumber }
                             .sortedBy { it.congestionScore }
 
-                    others.take(2) + bestZll
+                    others.take(RECOMMENDED_OTHERS_COUNT) + bestZll
                 } else {
                     emptyList()
                 }
@@ -84,7 +84,7 @@ constructor(
                 initialValue = emptyList(),
             )
 
-    val top3Channels: StateFlow<Set<Int>> =
+    val top5Channels: StateFlow<Set<Int>> =
         recommendedChannels
             .map { it.map { channel -> channel.channelNumber }.toSet() }
             .stateIn(
@@ -117,5 +117,6 @@ constructor(
     companion object {
         private const val STATE_FLOW_STOP_TIMEOUT_MS = 5000L
         private const val SCAN_DELAY_MS = 1000L
+        private const val RECOMMENDED_OTHERS_COUNT = 4
     }
 }

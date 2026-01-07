@@ -57,7 +57,7 @@ fun DashboardScreen(viewModel: MainViewModel = hiltViewModel()) {
     val zigbeeCongestion by viewModel.zigbeeCongestion.collectAsState()
     val wifiScanResults by viewModel.wifiScanResults.collectAsState()
     val recommendedChannels by viewModel.recommendedChannels.collectAsState()
-    val top3Channels by viewModel.top3Channels.collectAsState()
+    val top5Channels by viewModel.top5Channels.collectAsState()
 
     var selectedChannel by remember { mutableStateOf<ZigbeeChannelCongestion?>(null) }
     val sheetState = rememberModalBottomSheetState()
@@ -78,7 +78,7 @@ fun DashboardScreen(viewModel: MainViewModel = hiltViewModel()) {
                 zigbeeCongestion = zigbeeCongestion,
                 wifiScanResults = wifiScanResults,
                 recommendedChannels = recommendedChannels,
-                top3Channels = top3Channels,
+                top5Channels = top5Channels,
             ),
         actions =
             DashboardActions(
@@ -107,7 +107,6 @@ fun DashboardContent(
     sheetState: SheetState,
     scrollState: ScrollState,
 ) {
-
     Scaffold(
         floatingActionButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -217,7 +216,7 @@ fun DashboardEmptyPreview() {
                     zigbeeCongestion = emptyList(),
                     wifiScanResults = emptyList(),
                     recommendedChannels = emptyList(),
-                    top3Channels = emptySet(),
+                    top5Channels = emptySet(),
                 ),
             actions =
                 DashboardActions(onScanClick = {}, onChannelClick = {}, onChannelDismiss = {}),
@@ -240,7 +239,7 @@ fun DashboardInitialScanningPreview() {
                     zigbeeCongestion = emptyList(),
                     wifiScanResults = emptyList(),
                     recommendedChannels = emptyList(),
-                    top3Channels = emptySet(),
+                    top5Channels = emptySet(),
                 ),
             actions =
                 DashboardActions(onScanClick = {}, onChannelClick = {}, onChannelDismiss = {}),
@@ -283,8 +282,9 @@ fun DashboardResultsPreview() {
             isScanning = false,
             zigbeeCongestion = mockZigbee,
             wifiScanResults = mockWifi,
-            recommendedChannels = mockZigbee.filter { it.channelNumber in setOf(15, 20, 25) },
-            top3Channels = setOf(15, 20, 25),
+            recommendedChannels =
+                mockZigbee.filter { it.channelNumber in setOf(15, 17, 20, 22, 25) },
+            top5Channels = setOf(15, 17, 20, 22, 25),
         )
 
     ChannelorTheme {
@@ -324,8 +324,9 @@ fun DashboardScanningWithResultsPreview() {
             isScanning = true,
             zigbeeCongestion = mockZigbee,
             wifiScanResults = mockWifi,
-            recommendedChannels = mockZigbee.filter { it.channelNumber in setOf(15, 20, 25) },
-            top3Channels = setOf(15, 20, 25),
+            recommendedChannels =
+                mockZigbee.filter { it.channelNumber in setOf(15, 17, 20, 22, 25) },
+            top5Channels = setOf(15, 17, 20, 22, 25),
         )
 
     ChannelorTheme {
@@ -369,8 +370,9 @@ fun DashboardPhoneLandscapePreview() {
             isScanning = false,
             zigbeeCongestion = mockZigbee,
             wifiScanResults = mockWifi,
-            recommendedChannels = mockZigbee.filter { it.channelNumber in setOf(15, 20, 25) },
-            top3Channels = setOf(15, 20, 25),
+            recommendedChannels =
+                mockZigbee.filter { it.channelNumber in setOf(15, 17, 20, 22, 25) },
+            top5Channels = setOf(15, 17, 20, 22, 25),
         )
 
     ChannelorTheme {
@@ -410,8 +412,9 @@ fun DashboardTabletPreview() {
             isScanning = false,
             zigbeeCongestion = mockZigbee,
             wifiScanResults = mockWifi,
-            recommendedChannels = mockZigbee.filter { it.channelNumber in setOf(15, 20, 25) },
-            top3Channels = setOf(15, 20, 25),
+            recommendedChannels =
+                mockZigbee.filter { it.channelNumber in setOf(15, 17, 20, 22, 25) },
+            top5Channels = setOf(15, 17, 20, 22, 25),
         )
 
     ChannelorTheme {

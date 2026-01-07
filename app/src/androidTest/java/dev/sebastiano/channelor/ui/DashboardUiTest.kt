@@ -47,7 +47,7 @@ class DashboardUiTest {
                 zigbeeCongestion = listOf(channel),
                 wifiScanResults = emptyList(),
                 recommendedChannels = listOf(channel),
-                top3Channels = setOf(11),
+                top5Channels = setOf(11),
             )
 
         composeTestRule.setContent {

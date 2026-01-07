@@ -42,7 +42,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `recommendedChannels should always include best ZLL channel in 3rd position`() = runTest {
+    fun `recommendedChannels should always include best ZLL channel in last position`() = runTest {
         val congestionScores =
             listOf(
                 ZigbeeChannelCongestion(11, 2405, 0.5, isZllRecommended = true), // ZLL
@@ -60,9 +60,12 @@ class MainViewModelTest {
             viewModel.onPermissionResult(true)
 
             val result = awaitItem()
+            assertEquals(5, result.size)
             assertEquals(12, result[0].channelNumber)
             assertEquals(13, result[1].channelNumber)
-            assertEquals(11, result[2].channelNumber)
+            assertEquals(14, result[2].channelNumber)
+            assertEquals(15, result[3].channelNumber)
+            assertEquals(11, result[4].channelNumber)
         }
     }
 
@@ -88,6 +91,7 @@ class MainViewModelTest {
             viewModel.onPermissionResult(true)
 
             val result = awaitItem()
+            assertEquals(3, result.size)
             assertEquals(12, result[0].channelNumber)
             assertEquals(13, result[1].channelNumber)
             assertEquals(11, result[2].channelNumber)

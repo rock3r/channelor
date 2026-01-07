@@ -10,7 +10,7 @@ The app has been developed with the help of the AI features in Android Studio an
 - **2.4GHz Wi-Fi Scanning**: Identifies nearby Wi-Fi networks and their interference potential.
 - **Zigbee Interference Analysis**: Evaluates impact on all 16 Zigbee channels (11-26).
 - **Congestion Scoring**: Quantitative scoring based on RSSI and spectral overlap.
-- **Optimal Recommendations**: Highlights the top 3 least congested Zigbee channels.
+- **Optimal Recommendations**: Highlights the top 5 least congested Zigbee channels.
 - **Detailed Channel Insights**: Interactive channel cards that show detailed pros and cons (e.g.,
   ZLL compatibility, standard Wi-Fi overlap).
 - **Visual Representation**: Graphical view of spectral congestion.

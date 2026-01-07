@@ -3,7 +3,6 @@
 package dev.sebastiano.channelor.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -31,9 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,7 +48,7 @@ data class DashboardState(
     val zigbeeCongestion: List<ZigbeeChannelCongestion>,
     val wifiScanResults: List<WifiNetwork>,
     val recommendedChannels: List<ZigbeeChannelCongestion>,
-    val top3Channels: Set<Int>,
+    val top5Channels: Set<Int>,
 )
 
 /** Data class representing the actions available on the dashboard. */
@@ -62,26 +61,12 @@ data class DashboardActions(
 @Composable
 fun HeaderSection() {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier =
-                Modifier.size(40.dp)
-                    .background(
-                        brush =
-                            Brush.linearGradient(
-                                colors =
-                                    listOf(
-                                        MaterialTheme.colorScheme.primary,
-                                        MaterialTheme.colorScheme.secondary,
-                                    )
-                            ),
-                        shape = CircleShape,
-                    ),
-            contentAlignment = Alignment.Center,
-        ) {
+        Box(modifier = Modifier.size(40.dp).clip(CircleShape), contentAlignment = Alignment.Center) {
             Icon(
-                Icons.Rounded.Wifi,
+                painterResource(R.drawable.ic_zigbee),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.fillMaxSize(),
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
         Spacer(modifier = Modifier.width(16.dp))
@@ -138,11 +123,7 @@ fun RecommendationSection(
 }
 
 @Composable
-fun ChannelCard(
-    channel: ZigbeeChannelCongestion,
-    isSelected: Boolean = false,
-    onClick: () -> Unit,
-) {
+fun ChannelCard(channel: ZigbeeChannelCongestion, isSelected: Boolean = false, onClick: () -> Unit) {
     val containerColor = getChannelCardContainerColor(channel, isSelected)
     val onContainerColor = getChannelCardOnContainerColor(channel)
 
@@ -165,10 +146,7 @@ fun ChannelCard(
 }
 
 @Composable
-private fun getChannelCardContainerColor(
-    channel: ZigbeeChannelCongestion,
-    isSelected: Boolean,
-): Color {
+private fun getChannelCardContainerColor(channel: ZigbeeChannelCongestion, isSelected: Boolean): Color {
     val baseContainerColor =
         when {
             channel.isZllRecommended -> MaterialTheme.colorScheme.primaryContainer
@@ -223,6 +201,14 @@ private fun ChannelCardMainContent(channel: ZigbeeChannelCongestion, onContainer
                 color = onContainerColor,
             )
         }
+        if (channel.isWarning) {
+            Text(
+                text = stringResource(R.string.not_recommended),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = onContainerColor,
+            )
+        }
     }
 }
 
@@ -232,31 +218,21 @@ fun SpectrumAnalysisSection(
     selectedChannel: ZigbeeChannelCongestion?,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
-        Text(
-            text = stringResource(R.string.spectrum_analysis_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            colors =
-                CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        ) {
-            Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                if (state.wifiScanResults.isEmpty() && state.zigbeeCongestion.isEmpty()) {
-                    EmptySpectrumView(state.isScanning, modifier = Modifier.align(Alignment.Center))
-                } else {
-                    SpectrumGraph(
-                        wifiScanResults = state.wifiScanResults,
-                        zigbeeCongestion = state.zigbeeCongestion,
-                        top3ChannelNumbers = state.top3Channels,
-                        selectedChannel = selectedChannel,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
+    Card(
+        modifier = modifier.fillMaxSize(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            if (state.wifiScanResults.isEmpty() && state.zigbeeCongestion.isEmpty()) {
+                EmptySpectrumView(state.isScanning, modifier = Modifier.align(Alignment.Center))
+            } else {
+                SpectrumGraph(
+                    wifiScanResults = state.wifiScanResults,
+                    zigbeeCongestion = state.zigbeeCongestion,
+                    top5ChannelNumbers = state.top5Channels,
+                    selectedChannel = selectedChannel,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     }
@@ -300,12 +276,7 @@ fun ChannelCardPreview() {
             onClick = {},
         )
         ChannelCard(
-            channel =
-                ZigbeeChannelCongestion(
-                    channelNumber = 12,
-                    centerFrequency = 2410,
-                    congestionScore = 0.0,
-                ),
+            channel = ZigbeeChannelCongestion(channelNumber = 12, centerFrequency = 2410, congestionScore = 0.0),
             onClick = {},
         )
     }

@@ -14,7 +14,7 @@ and recommend the optimal Zigbee channels for smart home setups.
    channels (11-26).
 3. **Spectral Congestion Scoring**: Calculates a quantitative congestion score for each Zigbee
    channel using an algorithm that factors in Wi-Fi signal strength (RSSI) and spectral overlap.
-4. **Optimal Channel Recommendations**: Automatically identifies and highlights the top 3 least
+4. **Optimal Channel Recommendations**: Automatically identifies and highlights the top 5 least
    congested Zigbee channels.
 5. **Detailed Channel Insights**: Interactive channel cards that show detailed pros and cons (e.g.,
    ZLL compatibility, standard Wi-Fi overlap).
@@ -64,7 +64,7 @@ and recommend the optimal Zigbee channels for smart home setups.
     - `MainViewModel`: Managed by Hilt. Exposes `StateFlow` objects for UI consumption:
         - `wifiScanResults`: The raw list of detected Wi-Fi networks.
         - `zigbeeCongestion`: The calculated congestion data.
-        - `top3Channels`: The set of recommended optimal channels.
+        - `top5Channels`: The set of recommended optimal channels.
     - `triggerScan()`: Initiates a new Wi-Fi scan through the repository.
 - **`app/src/main/java/dev/sebastiano/channelor/ui/DashboardScreen.kt`**: The main UI container for
   the application.

@@ -1,11 +1,12 @@
 <resources>
     <string name="app_name">Channelor</string>
     <string name="app_subtitle">Zigbee Interference Analyzer</string>
-    <string name="recommended_channels_title">Recommended Channels</string>
-    <string name="scan_to_see_recommendations">Scan to see recommendations</string>
+    <string name="recommended_channels_title">Least chatty channels</string>
+    <string name="scan_to_see_recommendations">Scan to see channels</string>
     <string name="channel_number_format">CH %1$d</string>
     <string name="frequency_format">%1$d MHz</string>
     <string name="zll_recommended">ZLL Recommended</string>
+    <string name="not_recommended">Not Recommended</string>
     <string name="channel_details_title">Channel %1$d Details</string>
     <string name="center_frequency_format">Center frequency: %1$d MHz</string>
     <string name="pros">Pros</string>

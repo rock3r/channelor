@@ -46,7 +46,7 @@ private data class GraphConfig(
     val labelBackgroundPadding: Dp = 4.dp,
     val wifiStrokeWidth: Dp = 1.5.dp,
     val zigbeeRegularStrokeWidth: Dp = 1.dp,
-    val zigbeeTop3StrokeWidth: Dp = 3.dp,
+    val zigbeeTop5StrokeWidth: Dp = 3.dp,
     val gridLineWidth: Float = 2f,
 ) {
     val freqRange: Float = maxFreq - minFreq
@@ -86,7 +86,7 @@ private data class GraphColors(
     val axis: Color,
     val wifiStroke: Color,
     val wifiFill: Color,
-    val zigbeeTop3: Color,
+    val zigbeeTop5: Color,
     val zigbeeRecommended: Color,
     val zigbeeRegular: Color,
     val labelBackground: Color,
@@ -97,7 +97,7 @@ private data class GraphColors(
 fun SpectrumGraph(
     wifiScanResults: List<WifiNetwork>,
     zigbeeCongestion: List<ZigbeeChannelCongestion>,
-    top3ChannelNumbers: Set<Int>,
+    top5ChannelNumbers: Set<Int>,
     modifier: Modifier = Modifier,
     selectedChannel: ZigbeeChannelCongestion? = null,
 ) {
@@ -109,7 +109,7 @@ fun SpectrumGraph(
             axis = MaterialTheme.colorScheme.outline,
             wifiStroke = MaterialTheme.colorScheme.tertiary,
             wifiFill = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f),
-            zigbeeTop3 = MaterialTheme.colorScheme.primary,
+            zigbeeTop5 = MaterialTheme.colorScheme.primary,
             zigbeeRecommended = MaterialTheme.colorScheme.secondary,
             zigbeeRegular = MaterialTheme.colorScheme.outlineVariant,
             labelBackground = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
@@ -137,7 +137,7 @@ fun SpectrumGraph(
             params =
                 ZigbeeDrawParams(
                     channels = zigbeeCongestion,
-                    top3Channels = top3ChannelNumbers,
+                    top5Channels = top5ChannelNumbers,
                     selectedChannel = selectedChannel,
                     mapper = mapper,
                     config = config,
@@ -253,7 +253,7 @@ private fun buildWifiPath(
 /** Parameters for drawing Zigbee markers. */
 private data class ZigbeeDrawParams(
     val channels: List<ZigbeeChannelCongestion>,
-    val top3Channels: Set<Int>,
+    val top5Channels: Set<Int>,
     val selectedChannel: ZigbeeChannelCongestion?,
     val mapper: CoordinateMapper,
     val config: GraphConfig,
@@ -269,14 +269,14 @@ private fun DrawScope.drawZigbeeMarkers(params: ZigbeeDrawParams) {
 
     params.channels.forEach { channel ->
         val x = params.mapper.freqToX(channel.centerFrequency)
-        val isTop3 = channel.channelNumber in params.top3Channels
+        val isTop5 = channel.channelNumber in params.top5Channels
         val isSelected = channel.channelNumber == params.selectedChannel?.channelNumber
 
-        val color = getZigbeeColor(isTop3, isSelected, channel.isZllRecommended, params.colors)
+        val color = getZigbeeColor(isTop5, isSelected, channel.isZllRecommended, params.colors)
         val strokeWidth =
             when {
-                isSelected -> config.zigbeeTop3StrokeWidth.toPx() * 1.5f
-                isTop3 -> config.zigbeeTop3StrokeWidth.toPx()
+                isSelected -> config.zigbeeTop5StrokeWidth.toPx() * 1.5f
+                isTop5 -> config.zigbeeTop5StrokeWidth.toPx()
                 else -> config.zigbeeRegularStrokeWidth.toPx()
             }
 
@@ -289,7 +289,7 @@ private fun DrawScope.drawZigbeeMarkers(params: ZigbeeDrawParams) {
                         color = color,
                         fontSize = TextUnit.Unspecified,
                         fontWeight =
-                            if (isTop3 || isSelected) FontWeight.Bold else FontWeight.Normal,
+                            if (isTop5 || isSelected) FontWeight.Bold else FontWeight.Normal,
                     ),
             )
 
@@ -323,14 +323,14 @@ private fun DrawScope.drawZigbeeMarkers(params: ZigbeeDrawParams) {
 
 /** Determines the appropriate color for a Zigbee channel marker. */
 private fun getZigbeeColor(
-    isTop3: Boolean,
+    isTop5: Boolean,
     isSelected: Boolean,
     isRecommended: Boolean,
     colors: GraphColors,
 ): Color =
     when {
         isSelected -> colors.zigbeeSelected
-        isTop3 -> colors.zigbeeTop3
+        isTop5 -> colors.zigbeeTop5
         isRecommended -> colors.zigbeeRecommended
         else -> colors.zigbeeRegular.copy(alpha = 0.5f)
     }
@@ -377,7 +377,7 @@ fun SpectrumGraphPreview() {
                 SpectrumGraph(
                     wifiScanResults = mockWifi,
                     zigbeeCongestion = mockZigbee,
-                    top3ChannelNumbers = setOf(15, 20, 25),
+                    top5ChannelNumbers = setOf(15, 20, 25),
                     selectedChannel = mockZigbee.find { it.channelNumber == 11 },
                     modifier = Modifier.fillMaxSize(),
                 )
