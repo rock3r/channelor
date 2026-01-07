@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package dev.sebastiano.channelor.ui.theme
 
 import androidx.compose.material3.Typography

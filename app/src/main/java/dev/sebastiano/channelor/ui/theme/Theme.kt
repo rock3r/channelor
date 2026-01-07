@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package dev.sebastiano.channelor.ui.theme
 
 import android.os.Build
@@ -58,7 +60,6 @@ private val LightColorScheme =
         onSurfaceVariant = OnSurfaceVariantLight,
     )
 
-@Suppress("FunctionNaming")
 @Composable
 fun ChannelorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

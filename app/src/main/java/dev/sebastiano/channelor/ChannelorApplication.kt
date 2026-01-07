@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package dev.sebastiano.channelor
 
 import android.app.Application

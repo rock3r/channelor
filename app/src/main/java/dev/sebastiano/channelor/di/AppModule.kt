@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package dev.sebastiano.channelor.di
 
 import android.content.Context

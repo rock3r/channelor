@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package dev.sebastiano.channelor.domain
 
 import javax.inject.Inject
@@ -9,11 +11,9 @@ class ZigbeeAnalyzer @Inject constructor() {
     // Zigbee channels 11-26
     // Center Freq = 2405 + 5 * (k - 11)
     private val zigbeeChannels =
-            (ZIGBEE_MIN_CHANNEL..ZIGBEE_MAX_CHANNEL).map { channel ->
-                channel to
-                        (ZIGBEE_START_FREQ +
-                                ZIGBEE_CHANNEL_SPACING * (channel - ZIGBEE_MIN_CHANNEL))
-            }
+        (ZIGBEE_MIN_CHANNEL..ZIGBEE_MAX_CHANNEL).map { channel ->
+            channel to (ZIGBEE_START_FREQ + ZIGBEE_CHANNEL_SPACING * (channel - ZIGBEE_MIN_CHANNEL))
+        }
 
     fun analyzeCongestion(wifiNetworks: List<WifiNetwork>): List<ZigbeeChannelCongestion> {
         return zigbeeChannels.map { (channel, frequency) ->
@@ -21,27 +21,25 @@ class ZigbeeAnalyzer @Inject constructor() {
             val dbm = if (score > 0) kotlin.math.log10(score).times(POWER_DIVISOR).toInt() else null
 
             ZigbeeChannelCongestion(
-                    channelNumber = channel,
-                    centerFrequency = frequency,
-                    congestionScore = score,
-                    isZllRecommended = channel in ZLL_RECOMMENDED_CHANNELS,
-                    isWarning = channel == ZIGBEE_MAX_CHANNEL,
-                    pros = getProsForChannel(channel),
-                    cons = getConsForChannel(channel),
-                    interferingNetworks = interfering,
-                    congestionDbm = dbm,
+                channelNumber = channel,
+                centerFrequency = frequency,
+                congestionScore = score,
+                isZllRecommended = channel in ZLL_RECOMMENDED_CHANNELS,
+                isWarning = channel == ZIGBEE_MAX_CHANNEL,
+                pros = getProsForChannel(channel),
+                cons = getConsForChannel(channel),
+                interferingNetworks = interfering,
+                congestionDbm = dbm,
             )
         }
     }
 
-    @Suppress("MagicNumber")
     private fun getProsForChannel(channel: Int): List<Int> = buildList {
         if (channel in ZLL_RECOMMENDED_CHANNELS)
-                add(dev.sebastiano.channelor.R.string.pro_zll_recommended)
+            add(dev.sebastiano.channelor.R.string.pro_zll_recommended)
         if (channel == 26) add(dev.sebastiano.channelor.R.string.pro_no_wifi_interference)
     }
 
-    @Suppress("MagicNumber")
     private fun getConsForChannel(channel: Int): List<Int> = buildList {
         if (channel == 11) add(dev.sebastiano.channelor.R.string.con_wifi_1_interference)
         if (channel == 26) {
@@ -55,8 +53,8 @@ class ZigbeeAnalyzer @Inject constructor() {
     }
 
     private fun calculateCongestionForChannel(
-            zigbeeCenterFreq: Int,
-            scanResults: List<WifiNetwork>,
+        zigbeeCenterFreq: Int,
+        scanResults: List<WifiNetwork>,
     ): Pair<Double, List<WifiNetwork>> {
         var totalInterference = 0.0
         val interferingNetworks = mutableListOf<WifiNetwork>()

@@ -1,35 +1,36 @@
 [versions]
 agp = "8.13.2"
-kotlin = "2.0.21"
+kotlin = "2.3.0"
 coreKtx = "1.17.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
-lifecycleRuntimeKtx = "2.8.7"
-lifecycleViewmodelCompose = "2.8.7"
-lifecycleRuntimeCompose = "2.8.7"
-activityCompose = "1.10.1"
-composeBom = "2024.09.00"
+lifecycleRuntimeKtx = "2.10.0"
+lifecycleViewmodelCompose = "2.10.0"
+lifecycleRuntimeCompose = "2.10.0"
+activityCompose = "1.12.2"
+composeBom = "2025.12.01"
 googleDaggerHiltAndroid = "2.57.2"
-googleDevtoolsKsp = "2.0.21-1.0.26"
-hiltNavigationCompose = "1.2.0"
+googleDevtoolsKsp = "2.3.4"
+hiltNavigationCompose = "1.3.0"
+hiltLifecycleViewmodelCompose = "1.3.0"
 hiltAndroid = "2.57.2"
 hiltAndroidCompiler = "2.57.2"
 hiltAndroidTesting = "2.57.2"
 kotlinxCoroutinesTest = "1.10.2"
-core = "1.6.1"
-runner = "1.6.2"
+core = "1.7.0"
+runner = "1.7.0"
 kotlinxCoroutinesAndroid = "1.10.2"
 kotlinxCoroutinesCore = "1.10.2"
 accompanistPermissions = "0.37.3"
-mockk = "1.13.13"
-turbine = "1.2.0"
+mockk = "1.14.7"
+turbine = "1.2.1"
 ktfmt = "0.25.0"
 detekt = "1.23.8"
 detektComposeRules = "0.5.3"
-androidxWindow = "1.3.0"
-adaptive = "1.0.0"
-material3-window-size = "1.3.1"
+androidxWindow = "1.5.1"
+adaptive = "1.2.0"
+material3-window-size = "1.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +49,7 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-hilt-lifecycle-viewmodel-compose = { group = "androidx.hilt", name = "hilt-lifecycle-viewmodel-compose", version.ref = "hiltLifecycleViewmodelCompose" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hiltAndroidTesting" }
@@ -78,4 +80,3 @@ google-dagger-hilt-android = { id = "com.google.dagger.hilt.android", version.re
 google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "googleDevtoolsKsp" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
-

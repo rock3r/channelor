@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package dev.sebastiano.channelor.ui
 
 import androidx.lifecycle.ViewModel

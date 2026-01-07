@@ -1,7 +1,8 @@
 package dev.sebastiano.channelor.ui
 
-import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import dev.sebastiano.channelor.domain.ZigbeeChannelCongestion
 import dev.sebastiano.channelor.ui.theme.ChannelorTheme
 import org.junit.Rule

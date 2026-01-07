@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package dev.sebastiano.channelor.domain
 
 import org.junit.Assert.assertEquals

@@ -1,3 +1,5 @@
+@file:Suppress("FunctionNaming")
+
 package dev.sebastiano.channelor.data
 
 import android.Manifest
@@ -27,7 +29,7 @@ interface WifiRepository {
 class WifiRepositoryImpl
 @Inject
 constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val wifiManager: WifiManager,
 ) : WifiRepository {
 
